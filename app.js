@@ -5,6 +5,7 @@
   const STORE_NAME = "media";
   const DEFAULT_SLIDE_SECONDS = 5;
   const VENUE_PAGE_SIZE = 10;
+  const VENUE_TAB_DAYS = 8;
   const SLIDE_TRANSITION_MS = 760;
   const PDFJS_BASE_URL = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38";
   const PDFJS_URL = `${PDFJS_BASE_URL}/build/pdf.mjs`;
@@ -598,6 +599,42 @@
     return new Date(year, month - 1, day);
   }
 
+  function dateStringFromOffset(offset) {
+    const date = dateObjectFromString(currentDateString());
+    date.setDate(date.getDate() + offset);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  }
+
+  function venueTabDates() {
+    return Array.from({ length: VENUE_TAB_DAYS }, (_, index) => dateStringFromOffset(index));
+  }
+
+  function shortDateLabel(value) {
+    return new Intl.DateTimeFormat("ja-JP", {
+      month: "numeric",
+      day: "numeric",
+      weekday: "short"
+    }).format(dateObjectFromString(value));
+  }
+
+  function syncVenueDateInputs() {
+    const date = state.venueDate || currentDateString();
+    const eventDate = document.getElementById("eventDate");
+    const previewDate = document.getElementById("previewDate");
+    if (eventDate) eventDate.value = date;
+    if (previewDate) previewDate.value = date;
+  }
+
+  async function selectVenueDate(date, options = {}) {
+    state.venueDate = normalizeDateString(date) || currentDateString();
+    syncVenueDateInputs();
+    saveState();
+    renderEventList();
+    if (options.preview !== false) {
+      await renderAdminPreview();
+    }
+  }
+
   function isEventInActiveWindow(event, referenceTime) {
     return Boolean(eventActiveLabel(event, referenceTime));
   }
@@ -797,6 +834,7 @@
 
   function renderEventList() {
     const mount = document.getElementById("eventList");
+    renderVenueDateTabs();
     mount.replaceChildren();
     const targetDate = state.venueDate || currentDateString();
     const events = sortEvents(state.events).filter((event) => (event.date || currentDateString()) === targetDate);
@@ -811,6 +849,9 @@
       text.appendChild(createEl("strong", "", `${event.date || currentDateString()}　${event.time}　${displayVenueName(event.venue)}`));
       text.appendChild(createEl("small", "", event.name));
       const actions = createEl("div", "event-row-actions");
+      const showButton = createEl("button", "", "表示");
+      showButton.type = "button";
+      showButton.addEventListener("click", () => selectVenueDate(event.date || targetDate));
       const editButton = createEl("button", "", event.id === editingEventId ? "編集中" : "編集");
       editButton.type = "button";
       editButton.addEventListener("click", () => startEventEdit(event.id));
@@ -823,9 +864,30 @@
         renderEventList();
         await renderAdminPreview();
       });
-      actions.append(editButton, deleteButton);
+      actions.append(showButton, editButton, deleteButton);
       row.append(text, actions);
       mount.appendChild(row);
+    });
+  }
+
+  function renderVenueDateTabs() {
+    const mount = document.getElementById("venueDateTabs");
+    if (!mount) return;
+    const selectedDate = state.venueDate || currentDateString();
+    const counts = new Map();
+    state.events.forEach((event) => {
+      const date = event.date || currentDateString();
+      counts.set(date, (counts.get(date) || 0) + 1);
+    });
+    mount.replaceChildren();
+    venueTabDates().forEach((date, index) => {
+      const button = createEl("button", "venue-date-tab", `${index === 0 ? "本日 " : ""}${shortDateLabel(date)} (${counts.get(date) || 0})`);
+      button.type = "button";
+      button.role = "tab";
+      button.ariaSelected = String(date === selectedDate);
+      button.classList.toggle("is-active", date === selectedDate);
+      button.addEventListener("click", () => selectVenueDate(date));
+      mount.appendChild(button);
     });
   }
 
@@ -1162,6 +1224,7 @@
       state.events = sortEvents(state.events);
       saveState();
       resetEventForm();
+      syncVenueDateInputs();
       renderEventList();
       await renderAdminPreview();
     });

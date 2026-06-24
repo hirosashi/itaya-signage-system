@@ -312,6 +312,30 @@ body[data-admin-screen] .segmented {
   margin-top: 14px;
 }
 
+.venue-date-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(17, 27, 75, 0.1);
+}
+
+.venue-date-tab {
+  min-height: 38px;
+  padding: 0 12px;
+  color: var(--itaya-navy);
+  background: #ebe7dc;
+  border: 1px solid rgba(17, 27, 75, 0.12);
+  border-radius: 6px;
+}
+
+.venue-date-tab.is-active {
+  color: #fff;
+  background: var(--itaya-navy);
+  border-color: var(--itaya-navy);
+}
+
 .media-item,
 .event-row {
   display: grid;
