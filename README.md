@@ -12,9 +12,11 @@
 ## 画面
 
 - 管理画面: `index.html`
-- 広告利用画面1: `index.html?screen=ad1`
-- 広告利用画面2: `index.html?screen=ad2`
-- 会場案内: `index.html?screen=venue`
+- 広告利用画面1: `ad1.html`
+- 広告利用画面2: `ad2.html`
+- 会場案内: `venue.html`
+
+管理画面は簡易ログイン後に表示されます。現在の初期パスワードは `itaya2026` です。
 
 ## メモ
 

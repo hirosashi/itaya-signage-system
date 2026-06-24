@@ -6,7 +6,19 @@
     <title>ホテルニューイタヤ デジタルサイネージCMS 試作</title>
     <link rel="stylesheet" href="./styles.css">
   </head>
-  <body>
+  <body class="auth-locked">
+    <main id="loginApp" class="login-app" aria-label="Login">
+      <form id="loginForm" class="login-panel">
+        <img class="login-logo" src="./assets/logo_itaya.png" alt="HOTEL NEW ITAYA">
+        <h1>Signage CMS Login</h1>
+        <label>
+          <span>Password</span>
+          <input id="loginPassword" type="password" autocomplete="current-password" required>
+        </label>
+        <p id="loginError" class="login-error" role="alert"></p>
+        <button type="submit">Login</button>
+      </form>
+    </main>
     <main id="adminApp" class="admin-app" aria-label="CMS管理画面">
       <header class="admin-header">
         <div>
@@ -24,7 +36,7 @@
                 <p class="panel-kicker">Screen 01</p>
                 <h2>広告利用画面①</h2>
               </div>
-              <a class="ghost-link" data-view-link href="./index.html?screen=ad1" target="_blank">表示画面</a>
+              <a class="ghost-link" data-view-link href="./ad1.html" target="_blank">表示画面</a>
             </div>
             <p class="panel-note">JPEG/PNG等の画像、PDFを登録できます。縦は1枚表示、横は上段・下段を別々に登録して2枚上下表示します。PDFが複数ページの場合は、1ページずつ広告素材として扱います。</p>
             <div class="layout-choice" role="radiogroup" aria-label="広告表示方向">
@@ -81,7 +93,7 @@
                 <p class="panel-kicker">Screen 02</p>
                 <h2>広告利用画面②</h2>
               </div>
-              <a class="ghost-link" data-view-link href="./index.html?screen=ad2" target="_blank">表示画面</a>
+              <a class="ghost-link" data-view-link href="./ad2.html" target="_blank">表示画面</a>
             </div>
             <p class="panel-note">広告利用画面①と同じ仕様です。別の端末・別の設置場所向けに、素材と縦横設定を分けて管理できます。</p>
             <div class="layout-choice" role="radiogroup" aria-label="広告表示方向②">
@@ -138,7 +150,7 @@
                 <p class="panel-kicker">Screen 03</p>
                 <h2>会場案内</h2>
               </div>
-              <a class="ghost-link" data-view-link href="./index.html?screen=venue" target="_blank">表示画面</a>
+              <a class="ghost-link" data-view-link href="./venue.html" target="_blank">表示画面</a>
             </div>
             <p class="panel-note">必須項目は「時間・会場・名前」。表示範囲は、時間帯で自動切替または終日すべて表示を選べます。</p>
 

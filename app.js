@@ -13,7 +13,10 @@
   const PDF_RENDER_MAX_PIXELS = 6000000;
 
   const params = new URLSearchParams(window.location.search);
-  const screenParam = params.get("screen");
+  const pageScreen = document.body?.dataset?.screen || window.SIGNAGE_SCREEN || "";
+  const screenParam = params.get("screen") || pageScreen;
+  const AUTH_KEY = "itaya-signage-admin-auth";
+  const ADMIN_PASSWORD = window.SIGNAGE_ADMIN_PASSWORD || "itaya2026";
   const validScreens = new Set(["ad", "ad1", "ad2", "ad-portrait", "ad-landscape", "venue"]);
   const mediaUrlCache = new Map();
   const pdfPageUrlCache = new Map();
@@ -811,6 +814,42 @@
     document.getElementById(isAd2 ? "ad2LandscapeControls" : "adLandscapeControls").classList.toggle("is-hidden", !isLandscape);
   }
 
+  function isAdminAuthenticated() {
+    return sessionStorage.getItem(AUTH_KEY) === "true";
+  }
+
+  function revealAdmin() {
+    document.body.classList.remove("auth-locked");
+    document.getElementById("loginApp")?.classList.add("is-hidden");
+  }
+
+  function setupAdminAuth(onAuthenticated) {
+    const loginForm = document.getElementById("loginForm");
+    if (!loginForm) {
+      onAuthenticated();
+      return;
+    }
+    if (isAdminAuthenticated()) {
+      revealAdmin();
+      onAuthenticated();
+      return;
+    }
+    const passwordInput = document.getElementById("loginPassword");
+    const error = document.getElementById("loginError");
+    loginForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (passwordInput.value === ADMIN_PASSWORD) {
+        sessionStorage.setItem(AUTH_KEY, "true");
+        revealAdmin();
+        onAuthenticated();
+        return;
+      }
+      if (error) error.textContent = "Invalid password.";
+      passwordInput.select();
+    });
+    passwordInput?.focus();
+  }
+
   function setupAdmin() {
     populateVenues();
     document.getElementById("adSlideSeconds").value = state.slideSeconds.ad;
@@ -1287,6 +1326,6 @@
   if (validScreens.has(screenParam)) {
     setupViewer(screenParam);
   } else {
-    setupAdmin();
+    setupAdminAuth(setupAdmin);
   }
 })();
