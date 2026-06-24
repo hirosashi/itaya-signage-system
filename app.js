@@ -6,6 +6,7 @@
   const DEFAULT_SLIDE_SECONDS = 5;
   const VENUE_PAGE_SIZE = 10;
   const VENUE_TAB_DAYS = 7;
+  const VENUE_TIME_ZONE = "Asia/Tokyo";
   const SLIDE_TRANSITION_MS = 760;
   const PDFJS_BASE_URL = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38";
   const PDFJS_URL = `${PDFJS_BASE_URL}/build/pdf.mjs`;
@@ -574,14 +575,27 @@
     return hours * 60 + minutes;
   }
 
-  function currentTimeString() {
-    const now = new Date();
-    return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  function venueDateTimeParts(date = new Date()) {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: VENUE_TIME_ZONE,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23"
+    }).formatToParts(date);
+    return Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
   }
 
   function currentDateString() {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const parts = venueDateTimeParts();
+    return `${parts.year}-${parts.month}-${parts.day}`;
+  }
+
+  function currentTimeString() {
+    const parts = venueDateTimeParts();
+    return `${parts.hour}:${parts.minute}`;
   }
 
   function normalizeDateString(value) {
@@ -598,13 +612,14 @@
   function dateObjectFromString(value) {
     const date = normalizeDateString(value) || currentDateString();
     const [year, month, day] = date.split("-").map(Number);
-    return new Date(year, month - 1, day);
+    return new Date(Date.UTC(year, month - 1, day) - (9 * 60 * 60 * 1000));
   }
 
   function dateStringFromOffset(offset) {
     const date = dateObjectFromString(currentDateString());
-    date.setDate(date.getDate() + offset);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    date.setUTCDate(date.getUTCDate() + offset);
+    const parts = venueDateTimeParts(date);
+    return `${parts.year}-${parts.month}-${parts.day}`;
   }
 
   function venueTabDates() {
@@ -613,6 +628,7 @@
 
   function shortDateLabel(value) {
     return new Intl.DateTimeFormat("ja-JP", {
+      timeZone: VENUE_TIME_ZONE,
       month: "numeric",
       day: "numeric",
       weekday: "short"
@@ -669,6 +685,7 @@
 
   function formatDate(date = new Date()) {
     return new Intl.DateTimeFormat("ja-JP", {
+      timeZone: VENUE_TIME_ZONE,
       year: "numeric",
       month: "long",
       day: "numeric",
