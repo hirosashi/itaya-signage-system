@@ -352,6 +352,7 @@ body[data-admin-screen] .segmented {
 .event-row strong {
   display: block;
   margin-bottom: 4px;
+  white-space: pre-line;
 }
 
 .media-item small,
@@ -1107,6 +1108,7 @@ body[data-admin-screen] .segmented {
   font-size: clamp(13px, 2.42cqw, 27px);
   font-weight: 700;
   line-height: 1.05;
+  white-space: pre-line;
   overflow-wrap: anywhere;
 }
 

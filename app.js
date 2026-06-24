@@ -192,6 +192,10 @@
     return displayVenueName(venue).replace(/[（(][^）)]*[）)]$/, "");
   }
 
+  function formatVenueLines(venue) {
+    return displayVenueName(venue).split(",").map((item) => item.trim()).filter(Boolean).join("\n");
+  }
+
   function venueLocationFor(venue) {
     const name = displayVenueName(venue);
     return venueLocations[name] || venueLocations[venueBaseName(name)] || "";
@@ -875,7 +879,7 @@
       row.classList.toggle("is-editing", event.id === editingEventId);
       row.classList.toggle("is-visible-on-signage", event.visibleOnSignage === true);
       const text = createEl("div");
-      text.appendChild(createEl("strong", "", `${event.date || currentDateString()}　${event.time}　${displayVenueName(event.venue)}`));
+      text.appendChild(createEl("strong", "", `${event.date || currentDateString()}　${event.time}　${formatVenueLines(event.venue)}`));
       text.appendChild(createEl("small", "", event.name));
       const actions = createEl("div", "event-row-actions");
       const showButton = createEl("button", "", event.visibleOnSignage === true ? "表示中" : "表示");
@@ -1564,7 +1568,7 @@
         const roomLine = createEl("div", "venue-room-line");
         const location = venueLocationFor(event.venue);
         if (location) roomLine.appendChild(createEl("span", "venue-location-badge", location));
-        roomLine.appendChild(createEl("div", "venue-room", displayVenueName(event.venue)));
+        roomLine.appendChild(createEl("div", "venue-room", formatVenueLines(event.venue)));
         detail.appendChild(roomLine);
         detail.appendChild(createEl("div", "venue-divider"));
         detail.appendChild(createEl("div", "venue-name", event.name));
