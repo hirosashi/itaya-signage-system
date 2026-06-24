@@ -828,11 +828,11 @@
     document.getElementById("eventName").focus();
   }
 
-  async function showVenueEvent(id) {
+  async function toggleVenueEventVisibility(id) {
     const eventItem = state.events.find((item) => item.id === id);
     if (!eventItem) return;
     state.events = state.events.map((item) => (
-      item.id === id ? { ...item, visibleOnSignage: true } : item
+      item.id === id ? { ...item, visibleOnSignage: item.visibleOnSignage !== true } : item
     ));
     await selectVenueDate(eventItem.date || currentDateString());
   }
@@ -880,7 +880,7 @@
       const actions = createEl("div", "event-row-actions");
       const showButton = createEl("button", "", event.visibleOnSignage === true ? "表示中" : "表示");
       showButton.type = "button";
-      showButton.addEventListener("click", () => showVenueEvent(event.id));
+      showButton.addEventListener("click", () => toggleVenueEventVisibility(event.id));
       const editButton = createEl("button", "", event.id === editingEventId ? "編集中" : "編集");
       editButton.type = "button";
       editButton.addEventListener("click", () => startEventEdit(event.id));
