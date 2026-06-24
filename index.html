@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>&#12507;&#12486;&#12523;&#12491;&#12517;&#12540;&#12452;&#12479;&#12516; &#12469;&#12452;&#12493;&#12540;&#12472;&#31649;&#29702;</title>
-    <link rel="stylesheet" href="./styles.css?v=20260624-3">
+    <link rel="stylesheet" href="./styles.css?v=20260624-4">
   </head>
   <body class="auth-locked" data-admin-screen="ad1">
     <main id="loginApp" class="login-app" aria-label="Login">
@@ -229,6 +229,12 @@
                 <span>プレビュー時刻</span>
                 <input id="previewTime" type="time" value="18:00">
               </label>
+              <label class="csv-import-field">
+                <span>CSV</span>
+                <input id="venueCsvUpload" type="file" accept=".csv,text/csv">
+              </label>
+              <button id="importVenueCsv" type="button">CSV Import</button>
+              <span id="venueCsvImportStatus" class="csv-import-status" aria-live="polite"></span>
               <button id="loadSampleEvents" type="button">サンプル復元</button>
               <button id="clearEvents" type="button">会場案内を空にする</button>
             </div>
@@ -255,6 +261,6 @@
 
     <main id="viewerApp" class="viewer-app" aria-label="サイネージ表示画面"></main>
 
-    <script src="./app.js?v=20260624-3"></script>
+    <script src="./app.js?v=20260624-4"></script>
   </body>
 </html>

@@ -814,6 +814,127 @@
     document.getElementById(isAd2 ? "ad2LandscapeControls" : "adLandscapeControls").classList.toggle("is-hidden", !isLandscape);
   }
 
+  function parseCsvRows(text) {
+    const rows = [];
+    let row = [];
+    let field = "";
+    let quoted = false;
+    for (let index = 0; index < text.length; index += 1) {
+      const char = text[index];
+      const next = text[index + 1];
+      if (quoted) {
+        if (char === "\"" && next === "\"") {
+          field += "\"";
+          index += 1;
+        } else if (char === "\"") {
+          quoted = false;
+        } else {
+          field += char;
+        }
+      } else if (char === "\"") {
+        quoted = true;
+      } else if (char === ",") {
+        row.push(field);
+        field = "";
+      } else if (char === "\n") {
+        row.push(field.replace(/\r$/, ""));
+        rows.push(row);
+        row = [];
+        field = "";
+      } else {
+        field += char;
+      }
+    }
+    if (field || row.length) {
+      row.push(field.replace(/\r$/, ""));
+      rows.push(row);
+    }
+    return rows.filter((item) => item.some((cell) => String(cell || "").trim()));
+  }
+
+  function csvHeaderIndexes(headers) {
+    const pairs = {
+      table: "\u30c6\u30fc\u30d6\u30eb",
+      name: "\u540d\u524d",
+      company: "\u4f1a\u793e\u540d",
+      status: "\u30b9\u30c6\u30fc\u30bf\u30b9",
+      startTime: "\u958b\u59cb\u6642\u523b",
+      section: "\u30bb\u30af\u30b7\u30e7\u30f3",
+      groupName: "\u30b0\u30eb\u30fc\u30d7\u540d"
+    };
+    return Object.fromEntries(Object.entries(pairs).map(([key, label]) => [key, headers.indexOf(label)]));
+  }
+
+  function csvValue(row, indexes, key, fallbackIndex = -1) {
+    const index = indexes[key] >= 0 ? indexes[key] : fallbackIndex;
+    return index >= 0 ? String(row[index] || "").trim() : "";
+  }
+
+  function normalizeCsvTime(value) {
+    const match = String(value || "").trim().match(/^(\d{1,2}):(\d{2})/);
+    if (!match) return "";
+    return `${String(match[1]).padStart(2, "0")}:${match[2]}`;
+  }
+
+  function venueEventsFromCsv(text) {
+    const rows = parseCsvRows(text);
+    const headerIndex = rows.findIndex((row) => row.length > 20 && row.some((cell) => cell === "\u4e88\u7d04ID"));
+    if (headerIndex < 0) return [];
+    const indexes = csvHeaderIndexes(rows[headerIndex]);
+    return rows.slice(headerIndex + 1).map((row) => {
+      const status = csvValue(row, indexes, "status", 24);
+      if (status.includes("\u30ad\u30e3\u30f3\u30bb\u30eb")) return null;
+      const time = normalizeCsvTime(csvValue(row, indexes, "startTime", 38));
+      const venue = displayVenueName(csvValue(row, indexes, "table", 10) || csvValue(row, indexes, "section", 47));
+      const name = csvValue(row, indexes, "groupName", 50) || csvValue(row, indexes, "company", 14) || csvValue(row, indexes, "name", 12);
+      if (!time || !venue || !name) return null;
+      return {
+        id: crypto.randomUUID(),
+        time,
+        venue,
+        name
+      };
+    }).filter(Boolean);
+  }
+
+  async function readCsvFile(file) {
+    const buffer = await file.arrayBuffer();
+    const utf8 = new TextDecoder("utf-8", { fatal: false }).decode(buffer);
+    const replacementCount = (utf8.match(/\uFFFD/g) || []).length;
+    if (replacementCount < 3) return utf8;
+    try {
+      return new TextDecoder("shift_jis", { fatal: false }).decode(buffer);
+    } catch {
+      return utf8;
+    }
+  }
+
+  async function importVenueCsv() {
+    const input = document.getElementById("venueCsvUpload");
+    const status = document.getElementById("venueCsvImportStatus");
+    const file = input?.files?.[0];
+    if (!file) {
+      if (status) status.textContent = "CSV file is not selected.";
+      return;
+    }
+    try {
+      const events = sortEvents(venueEventsFromCsv(await readCsvFile(file)));
+      if (!events.length) {
+        if (status) status.textContent = "No venue events were found.";
+        return;
+      }
+      state.events = events;
+      resetEventForm();
+      saveState();
+      renderEventList();
+      await renderAdminPreview();
+      if (status) status.textContent = `${events.length} events imported.`;
+    } catch (error) {
+      console.warn("CSV import failed", error);
+      if (status) status.textContent = "CSV import failed.";
+    }
+  }
+
   function isAdminAuthenticated() {
     return sessionStorage.getItem(AUTH_KEY) === "true";
   }
@@ -999,6 +1120,8 @@
     });
 
     document.getElementById("previewTime").addEventListener("change", renderAdminPreview);
+
+    document.getElementById("importVenueCsv")?.addEventListener("click", importVenueCsv);
 
     document.getElementById("loadSampleEvents").addEventListener("click", async () => {
       state.events = cloneSampleEvents();

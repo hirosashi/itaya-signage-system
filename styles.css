@@ -543,6 +543,20 @@ body[data-admin-screen] .segmented {
   margin-top: 14px;
 }
 
+.csv-import-field input {
+  max-width: 230px;
+  padding-top: 9px;
+}
+
+.csv-import-status {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .preview-panel {
   position: sticky;
   top: 20px;
