@@ -5,7 +5,7 @@
   const STORE_NAME = "media";
   const DEFAULT_SLIDE_SECONDS = 5;
   const VENUE_PAGE_SIZE = 10;
-  const VENUE_TAB_DAYS = 8;
+  const VENUE_TAB_DAYS = 7;
   const SLIDE_TRANSITION_MS = 760;
   const PDFJS_BASE_URL = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38";
   const PDFJS_URL = `${PDFJS_BASE_URL}/build/pdf.mjs`;
