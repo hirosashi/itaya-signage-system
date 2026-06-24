@@ -287,7 +287,7 @@
   }
 
   let state = loadState();
-  let previewScreen = "ad1";
+  let previewScreen = document.body?.dataset?.adminScreen || "ad1";
   let renderToken = 0;
   let editingEventId = null;
 
@@ -850,7 +850,17 @@
     passwordInput?.focus();
   }
 
+  function syncAdminPageChrome() {
+    const adminScreen = document.body?.dataset?.adminScreen;
+    if (!adminScreen) return;
+    previewScreen = adminScreen;
+    document.querySelectorAll("[data-preview-screen]").forEach((button) => {
+      button.classList.toggle("active", button.dataset.previewScreen === adminScreen);
+    });
+  }
+
   function setupAdmin() {
+    syncAdminPageChrome();
     populateVenues();
     document.getElementById("adSlideSeconds").value = state.slideSeconds.ad;
     document.getElementById("ad2SlideSeconds").value = state.slideSeconds.ad2;

@@ -11,7 +11,9 @@
 
 ## 画面
 
-- 管理画面: `index.html`
+- 管理画面 広告1: `index.html`
+- 管理画面 広告2: `admin-ad2.html`
+- 管理画面 会場: `admin-venue.html`
 - 広告利用画面1: `ad1.html`
 - 広告利用画面2: `ad2.html`
 - 会場案内: `venue.html`

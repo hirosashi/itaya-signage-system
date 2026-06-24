@@ -177,6 +177,51 @@ body:not(.auth-locked) .login-app,
   object-fit: contain;
 }
 
+.admin-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 1480px;
+  margin: -10px auto 24px;
+}
+
+.admin-nav a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 18px;
+  color: var(--itaya-navy);
+  font-weight: 700;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(17, 27, 75, 0.12);
+  border-radius: 6px;
+}
+
+body[data-admin-screen="ad1"] [data-admin-nav="ad1"],
+body[data-admin-screen="ad2"] [data-admin-nav="ad2"],
+body[data-admin-screen="venue"] [data-admin-nav="venue"] {
+  color: #fff;
+  background: var(--itaya-navy);
+}
+
+body[data-admin-screen="ad1"] [data-admin-panel]:not([data-admin-panel="ad1"]),
+body[data-admin-screen="ad2"] [data-admin-panel]:not([data-admin-panel="ad2"]),
+body[data-admin-screen="venue"] [data-admin-panel]:not([data-admin-panel="venue"]) {
+  display: none;
+}
+
+body[data-admin-screen="ad1"] [data-preview-screen]:not([data-preview-screen="ad1"]),
+body[data-admin-screen="ad2"] [data-preview-screen]:not([data-preview-screen="ad2"]),
+body[data-admin-screen="venue"] [data-preview-screen]:not([data-preview-screen="venue"]) {
+  display: none;
+}
+
+body[data-admin-screen] .segmented {
+  grid-template-columns: minmax(86px, 1fr);
+}
+
 .admin-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 430px;
