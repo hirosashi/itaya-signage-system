@@ -1020,7 +1020,9 @@
         if (status) status.textContent = "No venue events were found.";
         return;
       }
-      state.events = events;
+      const importedDates = new Set(events.map((event) => event.date || currentDateString()));
+      const retainedEvents = state.events.filter((event) => !importedDates.has(event.date || currentDateString()));
+      state.events = sortEvents([...retainedEvents, ...events]);
       state.venueDate = events[0].date || state.venueDate || currentDateString();
       const previewDate = document.getElementById("previewDate");
       const eventDate = document.getElementById("eventDate");
@@ -1030,7 +1032,7 @@
       saveState();
       renderEventList();
       await renderAdminPreview();
-      if (status) status.textContent = `${events.length} events imported.`;
+      if (status) status.textContent = `${events.length} events imported. ${importedDates.size} dates updated.`;
     } catch (error) {
       console.warn("CSV import failed", error);
       if (status) status.textContent = "CSV import failed.";
