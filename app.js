@@ -176,6 +176,7 @@
     return sampleEvents.map((event) => ({
       id: crypto.randomUUID(),
       date: currentDateString(),
+      visibleOnSignage: false,
       ...event
     }));
   }
@@ -199,6 +200,7 @@
     return {
       ...event,
       date: event.date || currentDateString(),
+      visibleOnSignage: event.visibleOnSignage === true,
       venue: displayVenueName(event.venue)
     };
   }
@@ -809,6 +811,15 @@
     document.getElementById("eventName").focus();
   }
 
+  async function showVenueEvent(id) {
+    const eventItem = state.events.find((item) => item.id === id);
+    if (!eventItem) return;
+    state.events = state.events.map((item) => (
+      item.id === id ? { ...item, visibleOnSignage: true } : item
+    ));
+    await selectVenueDate(eventItem.date || currentDateString());
+  }
+
   function renderMediaList(key, mountId) {
     const mount = document.getElementById(mountId);
     mount.replaceChildren();
@@ -845,13 +856,14 @@
     events.forEach((event) => {
       const row = createEl("div", "event-row");
       row.classList.toggle("is-editing", event.id === editingEventId);
+      row.classList.toggle("is-visible-on-signage", event.visibleOnSignage === true);
       const text = createEl("div");
       text.appendChild(createEl("strong", "", `${event.date || currentDateString()}　${event.time}　${displayVenueName(event.venue)}`));
       text.appendChild(createEl("small", "", event.name));
       const actions = createEl("div", "event-row-actions");
-      const showButton = createEl("button", "", "表示");
+      const showButton = createEl("button", "", event.visibleOnSignage === true ? "表示中" : "表示");
       showButton.type = "button";
-      showButton.addEventListener("click", () => selectVenueDate(event.date || targetDate));
+      showButton.addEventListener("click", () => showVenueEvent(event.id));
       const editButton = createEl("button", "", event.id === editingEventId ? "編集中" : "編集");
       editButton.type = "button";
       editButton.addEventListener("click", () => startEventEdit(event.id));
@@ -987,6 +999,7 @@
       return {
         id: crypto.randomUUID(),
         date,
+        visibleOnSignage: false,
         time,
         venue,
         name
@@ -1218,10 +1231,10 @@
       state.venueDate = date;
       if (editingEventId) {
         state.events = state.events.map((item) => (
-          item.id === editingEventId ? { ...item, date, time, venue, name } : item
+          item.id === editingEventId ? { ...item, date, time, venue, name, visibleOnSignage: item.visibleOnSignage === true } : item
         ));
       } else {
-        state.events.push({ id: crypto.randomUUID(), date, time, venue, name });
+        state.events.push({ id: crypto.randomUUID(), date, visibleOnSignage: false, time, venue, name });
       }
       state.events = sortEvents(state.events);
       saveState();
@@ -1457,7 +1470,9 @@
   function getVenueEvents(referenceTime, referenceDate) {
     const period = periodForTime(referenceTime);
     const targetDate = normalizeDateString(referenceDate) || currentDateString();
-    const datedEvents = sortEvents(state.events).filter((event) => (event.date || currentDateString()) === targetDate);
+    const datedEvents = sortEvents(state.events).filter((event) => (
+      event.visibleOnSignage === true && (event.date || currentDateString()) === targetDate
+    ));
     if (state.venueDisplayMode === "all") {
       return {
         period: "all",
@@ -1491,7 +1506,7 @@
     const referenceDate = dateForVenue(options);
     const { period, events } = getVenueEvents(referenceTime, referenceDate);
     const visibleEvents = pagedEvents(events);
-    const eventKey = visibleEvents.map((event) => `${event.id}:${event.time}:${event.venue}:${event.name}:${isEventInActiveWindow(event, referenceTime) ? "active" : "idle"}`).join(",");
+    const eventKey = visibleEvents.map((event) => `${event.id}:${event.visibleOnSignage}:${event.time}:${event.venue}:${event.name}:${isEventInActiveWindow(event, referenceTime) ? "active" : "idle"}`).join(",");
     return ["venue", state.venueDisplayMode, state.venueEndedMode, state.venueTheme, referenceDate, referenceTime, period, state.slideSeconds.venue, events.length, venuePageIndex(events), eventKey].join("|");
   }
 
