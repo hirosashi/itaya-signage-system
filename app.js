@@ -174,6 +174,7 @@
   function cloneSampleEvents() {
     return sampleEvents.map((event) => ({
       id: crypto.randomUUID(),
+      date: currentDateString(),
       ...event
     }));
   }
@@ -196,6 +197,7 @@
   function normalizeEventVenue(event) {
     return {
       ...event,
+      date: event.date || currentDateString(),
       venue: displayVenueName(event.venue)
     };
   }
@@ -231,6 +233,7 @@
       venueDisplayMode: "auto",
       venueEndedMode: "show",
       venueTheme: "light",
+      venueDate: currentDateString(),
       adPortrait: [],
       adLandscape: [],
       slideSeconds: {
@@ -269,6 +272,7 @@
         venueDisplayMode: parsed.venueDisplayMode === "all" ? "all" : "auto",
         venueEndedMode: parsed.venueEndedMode === "hide" ? "hide" : "show",
         venueTheme: parsed.venueTheme === "dark" ? "dark" : "light",
+        venueDate: parsed.venueDate || currentDateString(),
         adPortrait: Array.isArray(parsed.adPortrait) ? parsed.adPortrait : [],
         adLandscape: Array.isArray(parsed.adLandscape) ? parsed.adLandscape : [],
         slideSeconds: {
@@ -572,6 +576,28 @@
     return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
   }
 
+  function currentDateString() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  }
+
+  function normalizeDateString(value) {
+    const text = String(value || "").trim();
+    const match = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (!match) return "";
+    return `${match[1]}-${String(match[2]).padStart(2, "0")}-${String(match[3]).padStart(2, "0")}`;
+  }
+
+  function dateForVenue(options = {}) {
+    return normalizeDateString(options.previewDate || params.get("date") || state.venueDate) || currentDateString();
+  }
+
+  function dateObjectFromString(value) {
+    const date = normalizeDateString(value) || currentDateString();
+    const [year, month, day] = date.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  }
+
   function isEventInActiveWindow(event, referenceTime) {
     return Boolean(eventActiveLabel(event, referenceTime));
   }
@@ -613,6 +639,8 @@
 
   function sortEvents(events) {
     return [...events].sort((a, b) => {
+      const dateDiff = String(a.date || "").localeCompare(String(b.date || ""), "ja");
+      if (dateDiff !== 0) return dateDiff;
       const diff = minutesFromTime(a.time) - minutesFromTime(b.time);
       if (diff !== 0) return diff;
       return a.venue.localeCompare(b.venue, "ja");
@@ -723,6 +751,8 @@
   function resetEventForm() {
     const form = document.getElementById("eventForm");
     if (form) form.reset();
+    const dateInput = document.getElementById("eventDate");
+    if (dateInput) dateInput.value = state.venueDate || currentDateString();
     const venueSelect = document.getElementById("eventVenue");
     if (venueSelect) venueSelect.value = venues[0];
     editingEventId = null;
@@ -733,6 +763,7 @@
     const eventItem = state.events.find((item) => item.id === id);
     if (!eventItem) return;
     editingEventId = id;
+    document.getElementById("eventDate").value = eventItem.date || state.venueDate || currentDateString();
     document.getElementById("eventTime").value = eventItem.time;
     document.getElementById("eventVenue").value = displayVenueName(eventItem.venue);
     document.getElementById("eventName").value = eventItem.name;
@@ -767,7 +798,8 @@
   function renderEventList() {
     const mount = document.getElementById("eventList");
     mount.replaceChildren();
-    const events = sortEvents(state.events);
+    const targetDate = state.venueDate || currentDateString();
+    const events = sortEvents(state.events).filter((event) => (event.date || currentDateString()) === targetDate);
     if (!events.length) {
       mount.appendChild(createEl("p", "panel-note", "会場案内は空です。必要な行を追加してください。"));
       return;
@@ -776,7 +808,7 @@
       const row = createEl("div", "event-row");
       row.classList.toggle("is-editing", event.id === editingEventId);
       const text = createEl("div");
-      text.appendChild(createEl("strong", "", `${event.time}　${displayVenueName(event.venue)}`));
+      text.appendChild(createEl("strong", "", `${event.date || currentDateString()}　${event.time}　${displayVenueName(event.venue)}`));
       text.appendChild(createEl("small", "", event.name));
       const actions = createEl("div", "event-row-actions");
       const editButton = createEl("button", "", event.id === editingEventId ? "編集中" : "編集");
@@ -858,6 +890,7 @@
       name: "\u540d\u524d",
       company: "\u4f1a\u793e\u540d",
       status: "\u30b9\u30c6\u30fc\u30bf\u30b9",
+      startDate: "\u958b\u59cb\u65e5",
       startTime: "\u958b\u59cb\u6642\u523b",
       section: "\u30bb\u30af\u30b7\u30e7\u30f3",
       groupName: "\u30b0\u30eb\u30fc\u30d7\u540d"
@@ -884,12 +917,14 @@
     return rows.slice(headerIndex + 1).map((row) => {
       const status = csvValue(row, indexes, "status", 24);
       if (status.includes("\u30ad\u30e3\u30f3\u30bb\u30eb")) return null;
+      const date = normalizeDateString(csvValue(row, indexes, "startDate", 37)) || state.venueDate || currentDateString();
       const time = normalizeCsvTime(csvValue(row, indexes, "startTime", 38));
       const venue = displayVenueName(csvValue(row, indexes, "table", 10) || csvValue(row, indexes, "section", 47));
       const name = csvValue(row, indexes, "groupName", 50) || csvValue(row, indexes, "company", 14) || csvValue(row, indexes, "name", 12);
       if (!time || !venue || !name) return null;
       return {
         id: crypto.randomUUID(),
+        date,
         time,
         venue,
         name
@@ -924,6 +959,11 @@
         return;
       }
       state.events = events;
+      state.venueDate = events[0].date || state.venueDate || currentDateString();
+      const previewDate = document.getElementById("previewDate");
+      const eventDate = document.getElementById("eventDate");
+      if (previewDate) previewDate.value = state.venueDate;
+      if (eventDate) eventDate.value = state.venueDate;
       resetEventForm();
       saveState();
       renderEventList();
@@ -986,6 +1026,8 @@
     document.getElementById("adSlideSeconds").value = state.slideSeconds.ad;
     document.getElementById("ad2SlideSeconds").value = state.slideSeconds.ad2;
     document.getElementById("venueSlideSeconds").value = state.slideSeconds.venue;
+    document.getElementById("eventDate").value = state.venueDate || currentDateString();
+    document.getElementById("previewDate").value = state.venueDate || currentDateString();
     document.getElementById(state.adLayout === "landscape" ? "adLayoutLandscape" : "adLayoutPortrait").checked = true;
     document.getElementById(state.ad2Layout === "landscape" ? "ad2LayoutLandscape" : "ad2LayoutPortrait").checked = true;
     document.getElementById(state.venueDisplayMode === "all" ? "venueModeAll" : "venueModeAuto").checked = true;
@@ -1094,18 +1136,28 @@
       await renderAdminPreview();
     });
 
+    document.getElementById("previewDate").addEventListener("change", async (event) => {
+      state.venueDate = normalizeDateString(event.target.value) || currentDateString();
+      document.getElementById("eventDate").value = state.venueDate;
+      saveState();
+      renderEventList();
+      await renderAdminPreview();
+    });
+
     document.getElementById("eventForm").addEventListener("submit", async (event) => {
       event.preventDefault();
+      const date = normalizeDateString(document.getElementById("eventDate").value) || currentDateString();
       const time = document.getElementById("eventTime").value;
       const venue = document.getElementById("eventVenue").value;
       const name = document.getElementById("eventName").value.trim();
       if (!time || !venue || !name) return;
+      state.venueDate = date;
       if (editingEventId) {
         state.events = state.events.map((item) => (
-          item.id === editingEventId ? { ...item, time, venue, name } : item
+          item.id === editingEventId ? { ...item, date, time, venue, name } : item
         ));
       } else {
-        state.events.push({ id: crypto.randomUUID(), time, venue, name });
+        state.events.push({ id: crypto.randomUUID(), date, time, venue, name });
       }
       state.events = sortEvents(state.events);
       saveState();
@@ -1156,6 +1208,7 @@
     const mount = document.getElementById("screenPreview");
     if (!mount) return;
     await renderSignage(previewScreen, mount, {
+      previewDate: document.getElementById("previewDate").value || state.venueDate || currentDateString(),
       previewTime: document.getElementById("previewTime").value || currentTimeString()
     });
   }
@@ -1336,16 +1389,17 @@
     return screen;
   }
 
-  function getVenueEvents(referenceTime) {
+  function getVenueEvents(referenceTime, referenceDate) {
     const period = periodForTime(referenceTime);
+    const targetDate = normalizeDateString(referenceDate) || currentDateString();
+    const datedEvents = sortEvents(state.events).filter((event) => (event.date || currentDateString()) === targetDate);
     if (state.venueDisplayMode === "all") {
-      const allEvents = sortEvents(state.events);
       return {
         period: "all",
-        events: state.venueEndedMode === "hide" ? allEvents.filter((event) => !isEventEnded(event, referenceTime)) : allEvents
+        events: state.venueEndedMode === "hide" ? datedEvents.filter((event) => !isEventEnded(event, referenceTime)) : datedEvents
       };
     }
-    const samePeriod = sortEvents(state.events).filter((event) => periodForTime(event.time) === period);
+    const samePeriod = datedEvents.filter((event) => periodForTime(event.time) === period);
     return {
       period,
       events: samePeriod
@@ -1369,10 +1423,11 @@
 
   function venueRenderKey(options = {}) {
     const referenceTime = options.previewTime || params.get("time") || currentTimeString();
-    const { period, events } = getVenueEvents(referenceTime);
+    const referenceDate = dateForVenue(options);
+    const { period, events } = getVenueEvents(referenceTime, referenceDate);
     const visibleEvents = pagedEvents(events);
     const eventKey = visibleEvents.map((event) => `${event.id}:${event.time}:${event.venue}:${event.name}:${isEventInActiveWindow(event, referenceTime) ? "active" : "idle"}`).join(",");
-    return ["venue", state.venueDisplayMode, state.venueEndedMode, state.venueTheme, formatDate(), referenceTime, period, state.slideSeconds.venue, events.length, venuePageIndex(events), eventKey].join("|");
+    return ["venue", state.venueDisplayMode, state.venueEndedMode, state.venueTheme, referenceDate, referenceTime, period, state.slideSeconds.venue, events.length, venuePageIndex(events), eventKey].join("|");
   }
 
   function renderKeyFor(type, options = {}) {
@@ -1381,14 +1436,15 @@
 
   function renderVenueScreen(options = {}) {
     const referenceTime = options.previewTime || params.get("time") || currentTimeString();
-    const { period, events } = getVenueEvents(referenceTime);
+    const referenceDate = dateForVenue(options);
+    const { period, events } = getVenueEvents(referenceTime, referenceDate);
     const visibleEvents = pagedEvents(events);
     const themeClass = state.venueTheme === "dark" ? "dark-mode" : "light-mode";
     const screen = createEl("section", `signage-screen venue-screen ${themeClass}`);
 
     const header = createEl("header", "venue-header");
     const title = createEl("h1", "", "本日の会場案内");
-    const date = createEl("p", "venue-date", `${formatDate()}　${periodLabel(period)}`);
+    const date = createEl("p", "venue-date", `${formatDate(dateObjectFromString(referenceDate))}　${periodLabel(period)}`);
     header.append(title, date);
 
     const list = createEl("div", "venue-list");

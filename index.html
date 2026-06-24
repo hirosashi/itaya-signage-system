@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>&#12507;&#12486;&#12523;&#12491;&#12517;&#12540;&#12452;&#12479;&#12516; &#12469;&#12452;&#12493;&#12540;&#12472;&#31649;&#29702;</title>
-    <link rel="stylesheet" href="./styles.css?v=20260624-4">
+    <link rel="stylesheet" href="./styles.css?v=20260624-5">
   </head>
   <body class="auth-locked" data-admin-screen="ad1">
     <main id="loginApp" class="login-app" aria-label="Login">
@@ -161,6 +161,10 @@
 
             <form id="eventForm" class="event-form">
               <label>
+                <span>日付</span>
+                <input id="eventDate" type="date" required>
+              </label>
+              <label>
                 <span>時間</span>
                 <input id="eventTime" type="time" required>
               </label>
@@ -226,6 +230,10 @@
                 <input id="venueSlideSeconds" type="number" min="1" max="120" step="1">
               </label>
               <label>
+                <span>プレビュー日付</span>
+                <input id="previewDate" type="date">
+              </label>
+              <label>
                 <span>プレビュー時刻</span>
                 <input id="previewTime" type="time" value="18:00">
               </label>
@@ -261,6 +269,6 @@
 
     <main id="viewerApp" class="viewer-app" aria-label="サイネージ表示画面"></main>
 
-    <script src="./app.js?v=20260624-4"></script>
+    <script src="./app.js?v=20260624-5"></script>
   </body>
 </html>

@@ -358,7 +358,7 @@ body[data-admin-screen] .segmented {
 
 .event-form {
   display: grid;
-  grid-template-columns: 130px 170px minmax(220px, 1fr) auto;
+  grid-template-columns: 150px 120px 170px minmax(220px, 1fr) auto;
   gap: 12px;
   align-items: end;
 }

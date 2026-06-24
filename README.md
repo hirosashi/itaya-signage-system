@@ -18,6 +18,8 @@
 - 広告利用画面2: `ad2.html`
 - 会場案内: `venue.html`
 
+会場案内は `venue.html?date=YYYY-MM-DD` で表示日を指定できます。時刻確認用の `time=HH:MM` と組み合わせる場合は `venue.html?date=YYYY-MM-DD&time=HH:MM` を使用します。
+
 管理画面は簡易ログイン後に表示されます。現在の初期パスワードは `itaya2026` です。
 
 ## メモ
