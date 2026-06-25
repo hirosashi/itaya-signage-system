@@ -390,7 +390,7 @@ body[data-admin-screen] .segmented {
   display: grid;
   grid-template-columns: 150px 120px 170px minmax(220px, 1fr) auto;
   gap: 12px;
-  align-items: end;
+  align-items: start;
 }
 
 .setting-field {
