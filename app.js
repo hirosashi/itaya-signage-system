@@ -3,6 +3,7 @@
   const DB_NAME = "itaya-signage-media";
   const DB_VERSION = 1;
   const STORE_NAME = "media";
+  const STATE_API_URL = "./state.php";
   const DEFAULT_SLIDE_SECONDS = 5;
   const VENUE_PAGE_SIZE = 10;
   const VENUE_TAB_DAYS = 7;
@@ -255,11 +256,7 @@
     };
   }
 
-  function loadState() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return defaultState();
-      const parsed = JSON.parse(raw);
+  function normalizeStoredState(parsed) {
       const parsedSeconds = parsed.slideSeconds || {};
       const legacyMedia = [
         ...(Array.isArray(parsed.adPortrait) ? parsed.adPortrait : []),
@@ -267,6 +264,7 @@
       ];
       const legacyLandscape = Array.isArray(parsed.adLandscape) ? parsed.adLandscape : [];
       const adMedia = Array.isArray(parsed.adMedia) ? parsed.adMedia : legacyMedia;
+      const venueDate = normalizeDateString(parsed.venueDate);
       return {
         adMedia: dedupeMedia(adMedia),
         adLandscapeTop: dedupeMedia(Array.isArray(parsed.adLandscapeTop) ? parsed.adLandscapeTop : legacyLandscape.filter((_, index) => index % 2 === 0)),
@@ -280,7 +278,7 @@
         venueDisplayMode: parsed.venueDisplayMode === "all" ? "all" : "auto",
         venueEndedMode: parsed.venueEndedMode === "hide" ? "hide" : "show",
         venueTheme: parsed.venueTheme === "dark" ? "dark" : "light",
-        venueDate: parsed.venueDate || currentDateString(),
+        venueDate: isVenueDateInCurrentTabs(venueDate) ? venueDate : currentDateString(),
         adPortrait: Array.isArray(parsed.adPortrait) ? parsed.adPortrait : [],
         adLandscape: Array.isArray(parsed.adLandscape) ? parsed.adLandscape : [],
         slideSeconds: {
@@ -292,16 +290,24 @@
         },
         events: Array.isArray(parsed.events) ? parsed.events.map(normalizeEventVenue) : cloneSampleEvents()
       };
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return defaultState();
+      return normalizeStoredState(JSON.parse(raw));
     } catch (error) {
       console.warn("Failed to load signage state", error);
       return defaultState();
     }
   }
 
-  let state = loadState();
+  let state = defaultState();
   let previewScreen = document.body?.dataset?.adminScreen || "ad1";
   let renderToken = 0;
   let editingEventId = null;
+  let saveStateTimer = 0;
 
   function ensureInitialAdSamples() {
     if (state.adSamplesInitialized) return;
@@ -329,9 +335,42 @@
 
   function saveState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    window.clearTimeout(saveStateTimer);
+    saveStateTimer = window.setTimeout(saveStateToServer, 200);
   }
 
-  ensureInitialAdSamples();
+  async function saveStateToServer() {
+    try {
+      const response = await fetch(STATE_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(state)
+      });
+      if (!response.ok) throw new Error(`State save failed: ${response.status}`);
+    } catch (error) {
+      console.warn("Failed to save shared state", error);
+    }
+  }
+
+  async function fetchSharedState() {
+    try {
+      const response = await fetch(`${STATE_API_URL}?t=${Date.now()}`, { cache: "no-store" });
+      if (!response.ok) return null;
+      const parsed = await response.json();
+      if (!parsed || !Object.keys(parsed).length) return null;
+      const sharedState = normalizeStoredState(parsed);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(sharedState));
+      return sharedState;
+    } catch (error) {
+      console.warn("Failed to load shared state", error);
+      return null;
+    }
+  }
+
+  async function refreshSharedState() {
+    const sharedState = await fetchSharedState();
+    if (sharedState) state = sharedState;
+  }
 
   function normalizeSlideSeconds(value) {
     const number = Number(value);
@@ -628,6 +667,38 @@
 
   function venueTabDates() {
     return Array.from({ length: VENUE_TAB_DAYS }, (_, index) => dateStringFromOffset(index));
+  }
+
+  function isVenueDateInCurrentTabs(date) {
+    const normalized = normalizeDateString(date);
+    return Boolean(normalized) && venueTabDates().includes(normalized);
+  }
+
+  function venueEventIdentity(event) {
+    return [
+      event.date || currentDateString(),
+      event.time || "",
+      displayVenueName(event.venue),
+      String(event.name || "").trim()
+    ].join("|");
+  }
+
+  function mergeImportedVenueEvents(importedEvents) {
+    const importedDates = new Set(importedEvents.map((event) => event.date || currentDateString()));
+    const visibleByIdentity = new Map(
+      state.events
+        .filter((event) => event.visibleOnSignage === true)
+        .map((event) => [venueEventIdentity(event), true])
+    );
+    const retainedEvents = state.events.filter((event) => !importedDates.has(event.date || currentDateString()));
+    const mergedImportedEvents = importedEvents.map((event) => ({
+      ...event,
+      visibleOnSignage: visibleByIdentity.get(venueEventIdentity(event)) === true
+    }));
+    return {
+      events: sortEvents([...retainedEvents, ...mergedImportedEvents]),
+      updatedDateCount: importedDates.size
+    };
   }
 
   function shortDateLabel(value) {
@@ -1053,9 +1124,8 @@
         if (status) status.textContent = "No venue events were found.";
         return;
       }
-      const importedDates = new Set(events.map((event) => event.date || currentDateString()));
-      const retainedEvents = state.events.filter((event) => !importedDates.has(event.date || currentDateString()));
-      state.events = sortEvents([...retainedEvents, ...events]);
+      const merged = mergeImportedVenueEvents(events);
+      state.events = merged.events;
       state.venueDate = events[0].date || state.venueDate || currentDateString();
       const previewDate = document.getElementById("previewDate");
       const eventDate = document.getElementById("eventDate");
@@ -1065,7 +1135,7 @@
       saveState();
       renderEventList();
       await renderAdminPreview();
-      if (status) status.textContent = `${events.length} events imported. ${importedDates.size} dates updated.`;
+      if (status) status.textContent = `${events.length} events imported. ${merged.updatedDateCount} dates updated.`;
     } catch (error) {
       console.warn("CSV import failed", error);
       if (status) status.textContent = "CSV import failed.";
@@ -1610,11 +1680,24 @@
     const mount = document.getElementById("viewerApp");
     await renderSignage(type, mount);
     window.setInterval(() => renderSignage(type, mount), 1000);
+    window.setInterval(async () => {
+      await refreshSharedState();
+      await renderSignage(type, mount);
+    }, 5000);
   }
 
-  if (validScreens.has(screenParam)) {
-    setupViewer(screenParam);
-  } else {
+  async function boot() {
+    const isViewer = validScreens.has(screenParam);
+    const sharedState = await fetchSharedState();
+    state = sharedState || loadState();
+    ensureInitialAdSamples();
+    if (!sharedState && !isViewer) saveState();
+    if (isViewer) {
+      setupViewer(screenParam);
+      return;
+    }
     setupAdminAuth(setupAdmin);
   }
+
+  boot();
 })();
