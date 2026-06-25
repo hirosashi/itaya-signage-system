@@ -790,13 +790,12 @@
   }
 
   function populateVenues() {
-    const select = document.getElementById("eventVenue");
-    select.replaceChildren();
+    const list = document.getElementById("eventVenueOptions");
+    list.replaceChildren();
     venues.forEach((venue) => {
       const option = document.createElement("option");
       option.value = venue;
-      option.textContent = venue;
-      select.appendChild(option);
+      list.appendChild(option);
     });
   }
 
