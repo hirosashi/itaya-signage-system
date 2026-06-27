@@ -675,6 +675,17 @@
       .slice(0, maxLength);
   }
 
+  function cleanMultilineText(value, maxLength) {
+    return String(value || "")
+      .replace(/\r\n?/g, "\n")
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .join("\n")
+      .slice(0, maxLength);
+  }
+
   function dateForVenue(options = {}) {
     return normalizeDateString(options.previewDate || params.get("date") || state.venueDate) || currentDateString();
   }
@@ -1156,7 +1167,7 @@
       const date = normalizeDateString(csvValue(row, indexes, "startDate", 37)) || state.venueDate || currentDateString();
       const time = normalizeCsvTime(csvValue(row, indexes, "startTime", 38));
       const venue = displayVenueName(cleanText(csvValue(row, indexes, "table", 10) || csvValue(row, indexes, "section", 47), 120));
-      const name = cleanText(csvValue(row, indexes, "groupName", 50) || csvValue(row, indexes, "company", 14) || csvValue(row, indexes, "name", 12), 240);
+      const name = cleanMultilineText(csvValue(row, indexes, "groupName", 50) || csvValue(row, indexes, "company", 14) || csvValue(row, indexes, "name", 12), 240);
       if (!time || !venue || !name) return null;
       return {
         id: crypto.randomUUID(),
@@ -1427,7 +1438,7 @@
       const date = normalizeDateString(document.getElementById("eventDate").value) || currentDateString();
       const time = normalizeTimeString(document.getElementById("eventTime").value);
       const venue = cleanText(document.getElementById("eventVenue").value, 120);
-      const name = cleanText(document.getElementById("eventName").value, 240);
+      const name = cleanMultilineText(document.getElementById("eventName").value, 240);
       if (!time || !venue || !name) return;
       state.venueDate = date;
       if (editingEventId) {

@@ -115,6 +115,18 @@ function signage_string(mixed $value, int $maxLength): string
     return substr($text, 0, $maxLength);
 }
 
+function signage_multiline_string(mixed $value, int $maxLength): string
+{
+    $text = str_replace(["\r\n", "\r"], "\n", trim((string) $value));
+    $text = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $text) ?? '';
+    $lines = array_values(array_filter(array_map('trim', explode("\n", $text)), static fn($line) => $line !== ''));
+    $text = implode("\n", $lines);
+    if (function_exists('mb_substr')) {
+        return mb_substr($text, 0, $maxLength, 'UTF-8');
+    }
+    return substr($text, 0, $maxLength);
+}
+
 function signage_bool(mixed $value): bool
 {
     return $value === true;
@@ -202,7 +214,7 @@ function signage_events(mixed $items): array
         }
         $time = signage_time($item['time'] ?? '');
         $venue = signage_string($item['venue'] ?? '', 120);
-        $name = signage_string($item['name'] ?? '', 240);
+        $name = signage_multiline_string($item['name'] ?? '', 240);
         if ($time === '' || $venue === '' || $name === '') {
             continue;
         }
