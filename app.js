@@ -529,9 +529,18 @@
     return pdfjsLib.getDocument(pdfLoadOptions(data)).promise;
   }
 
+  async function openPdfFromUrl(url) {
+    const pdfjsLib = await loadPdfJs();
+    const response = await fetch(url, { cache: "no-store" });
+    if (!response.ok) return null;
+    const data = new Uint8Array(await response.arrayBuffer());
+    return pdfjsLib.getDocument(pdfLoadOptions(data)).promise;
+  }
+
   async function getPdfDocument(media) {
     if (pdfDocumentCache.has(media.id)) return pdfDocumentCache.get(media.id);
     const promise = (async () => {
+      if (media.assetUrl) return openPdfFromUrl(media.assetUrl);
       const record = await getMedia(media.id);
       if (!record || !record.blob) return null;
       return openPdfFromBlob(record.blob);
@@ -552,10 +561,9 @@
     if (Number.isFinite(Number(media.pageCount)) && Number(media.pageCount) > 0) {
       return Number(media.pageCount);
     }
-    const record = await getMedia(media.id);
-    if (!record || !record.blob) return 1;
     try {
-      const pageCount = await readPdfPageCountFromBlob(record.blob);
+      const pdf = await getPdfDocument(media);
+      const pageCount = pdf?.numPages || 1;
       media.pageCount = pageCount;
       saveState();
       return pageCount;
@@ -1530,6 +1538,31 @@
     return object;
   }
 
+  async function renderPdfImageFrame(wrap, media, nativeUrl) {
+    try {
+      const pdfImageUrl = await renderPdfPageUrl(media, media.pageNumber || 1);
+      if (!pdfImageUrl) throw new Error("PDF image render returned empty URL");
+      const pageInfo = await getPdfPageInfo(media, media.pageNumber || 1);
+      if (pageInfo) {
+        wrap.style.setProperty("--pdf-page-ratio", `${pageInfo.width} / ${pageInfo.height}`);
+      }
+      const image = document.createElement("img");
+      image.className = "media-fit-width";
+      image.src = pdfImageUrl;
+      image.alt = media.pageNumber ? `${media.name} ${media.pageNumber}` : media.name;
+      wrap.appendChild(image);
+    } catch (error) {
+      console.warn("PDF image render failed", error);
+      try {
+        wrap.appendChild(await createNativePdfObject(media, nativeUrl));
+      } catch (nativeError) {
+        console.warn("Native PDF display setup failed", nativeError);
+        wrap.appendChild(emptyMediaMessage(media.name));
+      }
+    }
+    return wrap;
+  }
+
   async function createMediaFrame(media, fallbackText) {
     const wrap = createEl("div", "media-frame-wrap");
     if (!media) {
@@ -1543,6 +1576,7 @@
     }
     if (isPdfMedia(media)) {
       wrap.classList.add("pdf-native-frame");
+      return renderPdfImageFrame(wrap, media, url);
       try {
         const pageInfo = await getPdfPageInfo(media, media.pageNumber || 1);
         if (pageInfo) {
