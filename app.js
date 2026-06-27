@@ -310,6 +310,7 @@
   let renderToken = 0;
   let editingEventId = null;
   let saveStateTimer = 0;
+  let localMediaMigrationStarted = false;
 
   function ensureInitialAdSamples() {
     if (state.adSamplesInitialized) return;
@@ -833,10 +834,11 @@
     await renderAdminPreview();
   }
 
-  async function uploadMediaFile(file, pageCount = 0) {
+  async function uploadMediaFile(file, pageCount = 0, fallbackName = "upload") {
     const csrfToken = sessionStorage.getItem(AUTH_CSRF_KEY) || "";
     const formData = new FormData();
-    formData.append("file", file);
+    const fileName = file.name || fallbackName;
+    formData.append("file", file, fileName);
     if (pageCount > 0) formData.append("pageCount", String(pageCount));
     const response = await fetch(UPLOAD_API_URL, {
       method: "POST",
@@ -849,6 +851,40 @@
       throw new Error("Upload response is invalid");
     }
     return result.media;
+  }
+
+  async function migrateLocalMediaToServer() {
+    if (localMediaMigrationStarted) return;
+    localMediaMigrationStarted = true;
+    const keys = [
+      "adMedia",
+      "adLandscapeTop",
+      "adLandscapeBottom",
+      "ad2Media",
+      "ad2LandscapeTop",
+      "ad2LandscapeBottom"
+    ];
+    let migrated = false;
+    for (const key of keys) {
+      const items = Array.isArray(state[key]) ? state[key] : [];
+      for (let index = 0; index < items.length; index += 1) {
+        const media = items[index];
+        if (!media || media.assetUrl || isSampleMedia(media)) continue;
+        try {
+          const record = await getMedia(media.id);
+          if (!record?.blob) continue;
+          const uploaded = await uploadMediaFile(record.blob, media.pageCount || 0, media.name || `${media.id}.pdf`);
+          items[index] = { ...media, ...uploaded, id: uploaded.id || media.id };
+          migrated = true;
+        } catch (error) {
+          console.warn("Local media migration failed", error);
+        }
+      }
+    }
+    if (!migrated) return;
+    saveState();
+    renderAdminLists();
+    await renderAdminPreview();
   }
 
   async function removeMedia(key, id) {
@@ -1278,6 +1314,7 @@
     setEventFormMode();
     syncAdLayoutControls();
     syncAdLayoutControls("ad2");
+    migrateLocalMediaToServer();
 
     document.getElementById("adPortraitUpload").addEventListener("change", (event) => {
       handleUpload(event.target.files, "adMedia");
