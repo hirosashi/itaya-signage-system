@@ -8,6 +8,7 @@
 </IfModule>
 
 Options -Indexes
+DirectoryIndex index.php index.html
 
 <FilesMatch "^(index|admin-ad1|admin-ad2|admin-venue)\.html$|^login\.php$">
   AuthType Basic
@@ -33,7 +34,6 @@ Options -Indexes
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteRule ^$ index.html [R=302,L]
   RewriteRule ^data/ - [F,L]
   RewriteRule (^|/)\.git(/|$) - [F,L]
 </IfModule>
