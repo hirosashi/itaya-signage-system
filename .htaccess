@@ -3,7 +3,6 @@
 </IfModule>
 
 SetEnvIf GEOIP_COUNTRY_CODE ^JP$ allow_country
-SetEnvIf GEOIP_COUNTRY_CODE ^$ allow_country
 
 <IfModule mod_authz_core.c>
   Require env allow_country
