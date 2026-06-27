@@ -24,7 +24,7 @@ SetEnvIf GEOIP_COUNTRY_CODE ^JP$ allow_country
 <FilesMatch "^(index|admin-ad1|admin-ad2|admin-venue)\.html$|^login\.php$">
   AuthType Basic
   AuthName "Itaya Signage Admin"
-  AuthUserFile /home/jyunbi/.htpasswd-newitaya
+  AuthUserFile /home/jyunbi/www/newitaya.com/.htpasswd-newitaya
   <IfModule mod_authz_core.c>
     <RequireAll>
       Require env allow_country
