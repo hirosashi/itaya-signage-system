@@ -19,7 +19,7 @@
   const pageScreen = document.body?.dataset?.screen || window.SIGNAGE_SCREEN || "";
   const screenParam = params.get("screen") || pageScreen;
   const AUTH_KEY = "itaya-signage-admin-auth";
-  const ADMIN_PASSWORD = window.SIGNAGE_ADMIN_PASSWORD || "itaya2026";
+  const ADMIN_PASSWORD = window.SIGNAGE_ADMIN_PASSWORD || "@sNz8cm+wEWf";
   const validScreens = new Set(["ad", "ad1", "ad2", "ad-portrait", "ad-landscape", "venue"]);
   const mediaUrlCache = new Map();
   const pdfPageUrlCache = new Map();
