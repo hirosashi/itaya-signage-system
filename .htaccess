@@ -9,27 +9,12 @@
 
 Options -Indexes
 
-SetEnvIf GEOIP_COUNTRY_CODE ^JP$ allow_country
-
-<IfModule mod_authz_core.c>
-  Require env allow_country
-</IfModule>
-
-<IfModule !mod_authz_core.c>
-  Order Deny,Allow
-  Deny from all
-  Allow from env=allow_country
-</IfModule>
-
 <FilesMatch "^(index|admin-ad1|admin-ad2|admin-venue)\.html$|^login\.php$">
   AuthType Basic
   AuthName "Itaya Signage Admin"
   AuthUserFile /home/jyunbi/www/newitaya.com/.htpasswd-newitaya
   <IfModule mod_authz_core.c>
-    <RequireAll>
-      Require env allow_country
-      Require valid-user
-    </RequireAll>
+    Require valid-user
   </IfModule>
   <IfModule !mod_authz_core.c>
     Require valid-user
