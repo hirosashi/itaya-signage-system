@@ -4,7 +4,7 @@ declare(strict_types=1);
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 
-const SIGNAGE_ADMIN_PASSWORD_HASH = '$2y$10$KQAVVpNhfWS4DHtUmIViue2aV.pl24PRRkASZNG0jQBnGXzjnWKKS';
+const SIGNAGE_ADMIN_PASSWORD_HASH = '$2y$10$TBj2hz8voC4SmmjvB3i8R.ZftBTD2Pe.8eqX.wloUijGrPWaqJQ1G';
 const SIGNAGE_AUTH_KEY = 'itaya_signage_admin_authenticated';
 const SIGNAGE_CSRF_KEY = 'itaya_signage_csrf_token';
 const SIGNAGE_TOKEN_TTL = 43200;
