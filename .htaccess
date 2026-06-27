@@ -1,0 +1,16 @@
+<IfModule mod_headers.c>
+  Header set X-Robots-Tag "noindex, nofollow, noarchive"
+</IfModule>
+
+SetEnvIf GEOIP_COUNTRY_CODE ^JP$ allow_country
+SetEnvIf GEOIP_COUNTRY_CODE ^$ allow_country
+
+<IfModule mod_authz_core.c>
+  Require env allow_country
+</IfModule>
+
+<IfModule !mod_authz_core.c>
+  Order Deny,Allow
+  Deny from all
+  Allow from env=allow_country
+</IfModule>
