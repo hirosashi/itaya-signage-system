@@ -1,6 +1,13 @@
 <IfModule mod_headers.c>
   Header set X-Robots-Tag "noindex, nofollow, noarchive"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "no-referrer"
+  Header set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+  Header set Content-Security-Policy "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; worker-src 'self' blob: https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; object-src 'self' blob:; connect-src 'self'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'"
 </IfModule>
+
+Options -Indexes
 
 SetEnvIf GEOIP_COUNTRY_CODE ^JP$ allow_country
 
@@ -12,4 +19,35 @@ SetEnvIf GEOIP_COUNTRY_CODE ^JP$ allow_country
   Order Deny,Allow
   Deny from all
   Allow from env=allow_country
+</IfModule>
+
+<FilesMatch "^(index|admin-ad1|admin-ad2|admin-venue)\.html$|^login\.php$">
+  AuthType Basic
+  AuthName "Itaya Signage Admin"
+  AuthUserFile /home/jyunbi/.htpasswd-newitaya
+  <IfModule mod_authz_core.c>
+    <RequireAll>
+      Require env allow_country
+      Require valid-user
+    </RequireAll>
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Require valid-user
+  </IfModule>
+</FilesMatch>
+
+<FilesMatch "(^\.|\.bak$|\.old$|\.orig$|\.save$|\.sql$|\.log$|\.csv$|\.ini$|\.env$|composer\.(json|lock)$|package(-lock)?\.json$)">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order Allow,Deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^data/ - [F,L]
+  RewriteRule (^|/)\.git(/|$) - [F,L]
 </IfModule>

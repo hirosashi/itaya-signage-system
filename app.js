@@ -4,6 +4,7 @@
   const DB_VERSION = 1;
   const STORE_NAME = "media";
   const STATE_API_URL = "./state.php";
+  const AUTH_API_URL = "./login.php";
   const DEFAULT_SLIDE_SECONDS = 5;
   const VENUE_PAGE_SIZE = 10;
   const VENUE_TAB_DAYS = 7;
@@ -19,7 +20,7 @@
   const pageScreen = document.body?.dataset?.screen || window.SIGNAGE_SCREEN || "";
   const screenParam = params.get("screen") || pageScreen;
   const AUTH_KEY = "itaya-signage-admin-auth";
-  const ADMIN_PASSWORD = window.SIGNAGE_ADMIN_PASSWORD || "@sNz8cm+wEWf";
+  const AUTH_CSRF_KEY = "itaya-signage-admin-csrf";
   const validScreens = new Set(["ad", "ad1", "ad2", "ad-portrait", "ad-landscape", "venue"]);
   const mediaUrlCache = new Map();
   const pdfPageUrlCache = new Map();
@@ -341,9 +342,10 @@
 
   async function saveStateToServer() {
     try {
+      const csrfToken = sessionStorage.getItem(AUTH_CSRF_KEY) || "";
       const response = await fetch(STATE_API_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
         body: JSON.stringify(state)
       });
       if (!response.ok) throw new Error(`State save failed: ${response.status}`);
@@ -646,6 +648,21 @@
     const match = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
     if (!match) return "";
     return `${match[1]}-${String(match[2]).padStart(2, "0")}-${String(match[3]).padStart(2, "0")}`;
+  }
+
+  function normalizeTimeString(value) {
+    const match = String(value || "").trim().match(/^(\d{1,2}):([0-5]\d)$/);
+    if (!match) return "";
+    const hour = Number(match[1]);
+    if (!Number.isInteger(hour) || hour < 0 || hour > 23) return "";
+    return `${String(hour).padStart(2, "0")}:${match[2]}`;
+  }
+
+  function cleanText(value, maxLength) {
+    return String(value || "")
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+      .trim()
+      .slice(0, maxLength);
   }
 
   function dateForVenue(options = {}) {
@@ -1069,9 +1086,7 @@
   }
 
   function normalizeCsvTime(value) {
-    const match = String(value || "").trim().match(/^(\d{1,2}):(\d{2})/);
-    if (!match) return "";
-    return `${String(match[1]).padStart(2, "0")}:${match[2]}`;
+    return normalizeTimeString(String(value || "").trim().slice(0, 5));
   }
 
   function venueEventsFromCsv(text) {
@@ -1084,8 +1099,8 @@
       if (status.includes("\u30ad\u30e3\u30f3\u30bb\u30eb")) return null;
       const date = normalizeDateString(csvValue(row, indexes, "startDate", 37)) || state.venueDate || currentDateString();
       const time = normalizeCsvTime(csvValue(row, indexes, "startTime", 38));
-      const venue = displayVenueName(csvValue(row, indexes, "table", 10) || csvValue(row, indexes, "section", 47));
-      const name = csvValue(row, indexes, "groupName", 50) || csvValue(row, indexes, "company", 14) || csvValue(row, indexes, "name", 12);
+      const venue = displayVenueName(cleanText(csvValue(row, indexes, "table", 10) || csvValue(row, indexes, "section", 47), 120));
+      const name = cleanText(csvValue(row, indexes, "groupName", 50) || csvValue(row, indexes, "company", 14) || csvValue(row, indexes, "name", 12), 240);
       if (!time || !venue || !name) return null;
       return {
         id: crypto.randomUUID(),
@@ -1146,34 +1161,73 @@
     return sessionStorage.getItem(AUTH_KEY) === "true";
   }
 
+  async function fetchAuthStatus() {
+    try {
+      const csrfToken = sessionStorage.getItem(AUTH_CSRF_KEY) || "";
+      const response = await fetch(`${AUTH_API_URL}?t=${Date.now()}`, {
+        cache: "no-store",
+        headers: csrfToken ? { "X-CSRF-Token": csrfToken } : {}
+      });
+      if (!response.ok) return false;
+      const result = await response.json();
+      if (result?.authenticated === true && result.csrfToken) {
+        sessionStorage.setItem(AUTH_KEY, "true");
+        sessionStorage.setItem(AUTH_CSRF_KEY, result.csrfToken);
+        return true;
+      }
+    } catch (error) {
+      console.warn("Failed to check admin session", error);
+    }
+    sessionStorage.removeItem(AUTH_KEY);
+    sessionStorage.removeItem(AUTH_CSRF_KEY);
+    return false;
+  }
+
+  async function loginAdmin(password) {
+    const response = await fetch(AUTH_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password })
+    });
+    if (!response.ok) return false;
+    const result = await response.json();
+    if (result?.authenticated !== true || !result.csrfToken) return false;
+    sessionStorage.setItem(AUTH_KEY, "true");
+    sessionStorage.setItem(AUTH_CSRF_KEY, result.csrfToken);
+    return true;
+  }
+
   function revealAdmin() {
     document.body.classList.remove("auth-locked");
     document.getElementById("loginApp")?.classList.add("is-hidden");
   }
 
-  function setupAdminAuth(onAuthenticated) {
+  async function setupAdminAuth(onAuthenticated) {
     const loginForm = document.getElementById("loginForm");
     if (!loginForm) {
       onAuthenticated();
       return;
     }
-    if (isAdminAuthenticated()) {
+    if (isAdminAuthenticated() && await fetchAuthStatus()) {
       revealAdmin();
       onAuthenticated();
       return;
     }
     const passwordInput = document.getElementById("loginPassword");
     const error = document.getElementById("loginError");
-    loginForm.addEventListener("submit", (event) => {
+    loginForm.addEventListener("submit", async (event) => {
       event.preventDefault();
-      if (passwordInput.value === ADMIN_PASSWORD) {
-        sessionStorage.setItem(AUTH_KEY, "true");
+      if (error) error.textContent = "";
+      const submitButton = loginForm.querySelector('button[type="submit"]');
+      if (submitButton) submitButton.disabled = true;
+      if (await loginAdmin(passwordInput.value)) {
         revealAdmin();
         onAuthenticated();
         return;
       }
       if (error) error.textContent = "Invalid password.";
       passwordInput.select();
+      if (submitButton) submitButton.disabled = false;
     });
     passwordInput?.focus();
   }
@@ -1314,9 +1368,9 @@
     document.getElementById("eventForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       const date = normalizeDateString(document.getElementById("eventDate").value) || currentDateString();
-      const time = document.getElementById("eventTime").value;
-      const venue = document.getElementById("eventVenue").value;
-      const name = document.getElementById("eventName").value.trim();
+      const time = normalizeTimeString(document.getElementById("eventTime").value);
+      const venue = cleanText(document.getElementById("eventVenue").value, 120);
+      const name = cleanText(document.getElementById("eventName").value, 240);
       if (!time || !venue || !name) return;
       state.venueDate = date;
       if (editingEventId) {
@@ -1696,7 +1750,7 @@
       setupViewer(screenParam);
       return;
     }
-    setupAdminAuth(setupAdmin);
+    await setupAdminAuth(setupAdmin);
   }
 
   boot();
