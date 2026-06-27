@@ -199,6 +199,10 @@ body:not(.auth-locked) .login-app,
   border-radius: 6px;
 }
 
+.admin-nav-manual {
+  margin-left: auto;
+}
+
 body[data-admin-screen="ad1"] [data-admin-nav="ad1"],
 body[data-admin-screen="ad2"] [data-admin-nav="ad2"],
 body[data-admin-screen="venue"] [data-admin-nav="venue"] {
