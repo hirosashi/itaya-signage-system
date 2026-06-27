@@ -5,6 +5,7 @@
   const STORE_NAME = "media";
   const STATE_API_URL = "./state.php";
   const AUTH_API_URL = "./login.php";
+  const UPLOAD_API_URL = "./upload.php";
   const DEFAULT_SLIDE_SECONDS = 5;
   const VENUE_PAGE_SIZE = 10;
   const VENUE_TAB_DAYS = 7;
@@ -806,29 +807,40 @@
     const uploads = Array.from(files);
     for (const file of uploads) {
       if (!isAllowedMediaFile(file)) continue;
-      const id = crypto.randomUUID();
       const type = guessType(file);
-      const media = {
-        id,
-        name: file.name,
-        type,
-        size: file.size,
-        createdAt: new Date().toISOString()
-      };
+      let pageCount = 0;
       if (type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
         try {
-          media.pageCount = await readPdfPageCountFromBlob(file);
+          pageCount = await readPdfPageCountFromBlob(file);
         } catch (error) {
           console.warn("PDF page count failed", error);
-          media.pageCount = 1;
+          pageCount = 1;
         }
       }
-      await putMedia({ ...media, blob: file });
+      const media = await uploadMediaFile(file, pageCount);
       state[key].push(media);
     }
     saveState();
     renderAdminLists();
     await renderAdminPreview();
+  }
+
+  async function uploadMediaFile(file, pageCount = 0) {
+    const csrfToken = sessionStorage.getItem(AUTH_CSRF_KEY) || "";
+    const formData = new FormData();
+    formData.append("file", file);
+    if (pageCount > 0) formData.append("pageCount", String(pageCount));
+    const response = await fetch(UPLOAD_API_URL, {
+      method: "POST",
+      headers: csrfToken ? { "X-CSRF-Token": csrfToken } : {},
+      body: formData
+    });
+    if (!response.ok) throw new Error(`Upload failed: ${response.status}`);
+    const result = await response.json();
+    if (result?.ok !== true || !result.media?.assetUrl) {
+      throw new Error("Upload response is invalid");
+    }
+    return result.media;
   }
 
   async function removeMedia(key, id) {

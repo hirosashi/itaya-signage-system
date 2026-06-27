@@ -170,7 +170,10 @@ function signage_media_list(mixed $items): array
             'size' => signage_int_range($item['size'] ?? 0, 0, 200 * 1024 * 1024, 0),
         ];
         if (!empty($item['assetUrl'])) {
-            $media['assetUrl'] = signage_string($item['assetUrl'], 240);
+            $assetUrl = signage_string($item['assetUrl'], 240);
+            if (preg_match('#^\./(?:assets|uploads)/[A-Za-z0-9._~/%-]+$#', $assetUrl)) {
+                $media['assetUrl'] = $assetUrl;
+            }
         }
         if (!empty($item['createdAt'])) {
             $media['createdAt'] = signage_string($item['createdAt'], 40);

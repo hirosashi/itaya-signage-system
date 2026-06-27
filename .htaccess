@@ -10,7 +10,7 @@
 Options -Indexes
 DirectoryIndex index.php index.html
 
-<FilesMatch "^(index|admin-ad1|admin-ad2|admin-venue)\.html$|^login\.php$">
+<FilesMatch "^(index|admin-ad1|admin-ad2|admin-venue)\.html$|^(login|upload)\.php$">
   AuthType Basic
   AuthName "Itaya Signage Admin"
   AuthUserFile /home/jyunbi/www/newitaya.com/.htpasswd-newitaya

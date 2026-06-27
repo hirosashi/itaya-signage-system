@@ -8,4 +8,5 @@ build/
 .env.*
 data/signage-state.json
 data/signage-updates.log
+uploads/
 .htpasswd-newitaya
