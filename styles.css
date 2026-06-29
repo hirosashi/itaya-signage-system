@@ -1024,7 +1024,7 @@ body[data-admin-screen] .segmented {
   height: 100%;
   color: #fff;
   font-family: "Times New Roman", "Hiragino Mincho ProN", "Yu Mincho", serif;
-  font-size: clamp(32px, 7.2cqw, 80px);
+  font-size: clamp(24px, 5.4cqw, 60px);
   line-height: 1;
   text-align: center;
   background: var(--itaya-navy);
@@ -1038,7 +1038,7 @@ body[data-admin-screen] .segmented {
 .venue-status-label {
   color: #f2d98f;
   font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
-  font-size: clamp(10px, 1.7cqw, 19px);
+  font-size: clamp(7px, 1.27cqw, 14px);
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;
@@ -1088,11 +1088,11 @@ body[data-admin-screen] .segmented {
   display: inline-grid;
   flex: 0 0 auto;
   place-items: center;
-  min-width: clamp(67px, 13.3cqw, 147px);
-  height: clamp(27px, 4.4cqw, 50px);
+  min-width: clamp(50px, 9.96cqw, 110px);
+  height: clamp(20px, 3.3cqw, 37px);
   padding: 0 clamp(5px, 1.05cqw, 12px);
   color: #fff;
-  font-size: clamp(11px, 2.16cqw, 24px);
+  font-size: clamp(8px, 1.62cqw, 18px);
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;
@@ -1109,7 +1109,7 @@ body[data-admin-screen] .segmented {
   min-width: 0;
   color: #111;
   font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
-  font-size: clamp(21px, 3.87cqw, 43px);
+  font-size: clamp(16px, 2.9cqw, 32px);
   font-weight: 700;
   line-height: 1.05;
   white-space: pre-line;
@@ -1124,7 +1124,7 @@ body[data-admin-screen] .segmented {
   align-self: center;
   overflow-wrap: anywhere;
   font-family: "Hiragino Mincho ProN", "Yu Mincho", "Times New Roman", serif;
-  font-size: clamp(24px, 4.56cqw, 51px);
+  font-size: clamp(18px, 3.42cqw, 38px);
   font-weight: 700;
   line-height: 1.15;
   white-space: pre-line;
