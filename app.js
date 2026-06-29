@@ -1497,7 +1497,12 @@
   async function renderAdminPreview() {
     const mount = document.getElementById("screenPreview");
     if (!mount) return;
-    await renderSignage(previewScreen, mount, {
+    let frame = mount.querySelector(".monitor-preview-frame");
+    if (!frame) {
+      frame = createEl("div", "monitor-preview-frame");
+      mount.replaceChildren(frame);
+    }
+    await renderSignage(previewScreen, frame, {
       previewDate: document.getElementById("previewDate").value || state.venueDate || currentDateString(),
       previewTime: document.getElementById("previewTime").value || currentTimeString()
     });

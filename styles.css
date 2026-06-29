@@ -625,16 +625,17 @@ body[data-admin-screen] .segmented {
 
 .monitor-preview {
   display: grid;
-  place-items: center;
+  place-items: start center;
   width: 100%;
   min-height: 720px;
   padding: 12px;
+  overflow: auto;
   background: #ebe7dc;
   border-radius: 8px;
 }
 
 .viewer-app > .signage-screen,
-.monitor-preview > .signage-screen {
+.monitor-preview-frame > .signage-screen {
   grid-area: 1 / 1;
 }
 
@@ -702,81 +703,44 @@ body[data-admin-screen] .segmented {
   font-weight: 700;
 }
 
-.monitor-preview .signage-screen {
-  width: min(100%, 390px);
-  height: auto;
-  min-height: auto;
-  aspect-ratio: 9 / 16;
-  container-type: normal;
+.monitor-preview-frame {
+  --preview-scale: 0.32;
+  position: relative;
+  width: calc(1215px * var(--preview-scale));
+  height: calc(2160px * var(--preview-scale));
+  max-width: none;
+  overflow: hidden;
+  background: #111;
   box-shadow: 0 0 0 1px rgba(17, 27, 75, 0.18);
 }
 
-.monitor-preview .venue-header {
-  padding: 14px 20px 8px;
+.monitor-preview-frame .signage-screen {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1215px;
+  height: 2160px;
+  min-height: auto;
+  aspect-ratio: 9 / 16;
+  container-type: size;
+  box-shadow: none;
+  transform: translateX(-50%) scale(var(--preview-scale));
+  transform-origin: top center;
 }
 
-.monitor-preview .venue-header h1 {
-  font-size: 26px;
+.monitor-preview-frame .signage-screen.is-entering {
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px) scale(var(--preview-scale));
 }
 
-.monitor-preview .venue-date {
-  margin-top: 4px;
-  font-size: 11px;
+.monitor-preview-frame .signage-screen.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) scale(var(--preview-scale));
 }
 
-.monitor-preview .venue-list {
-  gap: 4px;
-  padding: 8px 14px 10px;
-}
-
-.monitor-preview .venue-card {
-  grid-template-columns: 70px 1fr;
-  border-width: 1px;
-}
-
-.monitor-preview .venue-time {
-  font-size: 22px;
-}
-
-.monitor-preview .venue-status-label {
-  font-size: 7px;
-}
-
-.monitor-preview .venue-detail {
-  grid-template-columns: 70px 1px minmax(0, 1fr);
-  gap: 10px;
-  padding: 0px 10px;
-}
-
-.monitor-preview .venue-room-line {
-  gap: 3px;
-}
-
-.monitor-preview .venue-divider {
-  width: 1px;
-  height: 64%;
-  min-height: 20px;
-}
-
-.monitor-preview .venue-location-badge {
-  min-width: 42px;
-  height: 17px;
-  padding: 0 5px;
-  font-size: 8px;
-}
-
-.monitor-preview .venue-room {
-  font-size: 12px;
-  line-height: 1.03;
-}
-
-.monitor-preview .venue-name {
-  font-size: 13px;
-  line-height: 1.1;
-}
-
-.monitor-preview .venue-footer img {
-  width: 92px;
+.monitor-preview-frame .signage-screen.is-leaving {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-8px) scale(var(--preview-scale));
 }
 
 .ad-stage {
@@ -1262,5 +1226,9 @@ body[data-admin-screen] .segmented {
   .monitor-preview {
     min-height: 560px;
     padding: 10px;
+  }
+
+  .monitor-preview-frame {
+    --preview-scale: 0.27;
   }
 }
