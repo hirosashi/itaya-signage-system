@@ -204,12 +204,18 @@
     return venueLocations[name] || venueLocations[venueBaseName(name)] || "";
   }
 
+  function eventLocationFor(event) {
+    return cleanText(event?.location || "", 60) || venueLocationFor(event?.venue || "");
+  }
+
   function normalizeEventVenue(event) {
+    const venue = displayVenueName(event.venue);
     return {
       ...event,
       date: event.date || currentDateString(),
       visibleOnSignage: event.visibleOnSignage === true,
-      venue: displayVenueName(event.venue)
+      venue,
+      location: cleanText(event.location || venueLocationFor(venue), 60)
     };
   }
 
@@ -969,6 +975,8 @@
     if (dateInput) dateInput.value = state.venueDate || currentDateString();
     const venueSelect = document.getElementById("eventVenue");
     if (venueSelect) venueSelect.value = venues[0];
+    const locationInput = document.getElementById("eventLocation");
+    if (locationInput) locationInput.value = venueLocationFor(venues[0]);
     editingEventId = null;
     setEventFormMode();
   }
@@ -980,6 +988,7 @@
     document.getElementById("eventDate").value = eventItem.date || state.venueDate || currentDateString();
     document.getElementById("eventTime").value = eventItem.time;
     document.getElementById("eventVenue").value = displayVenueName(eventItem.venue);
+    document.getElementById("eventLocation").value = eventLocationFor(eventItem);
     document.getElementById("eventName").value = eventItem.name;
     setEventFormMode();
     renderEventList();
@@ -1141,6 +1150,7 @@
       status: "\u30b9\u30c6\u30fc\u30bf\u30b9",
       startDate: "\u958b\u59cb\u65e5",
       startTime: "\u958b\u59cb\u6642\u523b",
+      location: "\u5834\u6240",
       section: "\u30bb\u30af\u30b7\u30e7\u30f3",
       groupName: "\u30b0\u30eb\u30fc\u30d7\u540d"
     };
@@ -1167,6 +1177,7 @@
       const date = normalizeDateString(csvValue(row, indexes, "startDate", 37)) || state.venueDate || currentDateString();
       const time = normalizeCsvTime(csvValue(row, indexes, "startTime", 38));
       const venue = displayVenueName(cleanText(csvValue(row, indexes, "table", 10) || csvValue(row, indexes, "section", 47), 120));
+      const location = cleanText(csvValue(row, indexes, "location"), 60) || venueLocationFor(venue);
       const name = cleanMultilineText(csvValue(row, indexes, "groupName", 50) || csvValue(row, indexes, "company", 14) || csvValue(row, indexes, "name", 12), 240);
       if (!time || !venue || !name) return null;
       return {
@@ -1175,6 +1186,7 @@
         visibleOnSignage: false,
         time,
         venue,
+        location,
         name
       };
     }).filter(Boolean);
@@ -1433,20 +1445,27 @@
       await renderAdminPreview();
     });
 
+    document.getElementById("eventVenue").addEventListener("change", (event) => {
+      const locationInput = document.getElementById("eventLocation");
+      if (!locationInput) return;
+      locationInput.value = venueLocationFor(event.target.value);
+    });
+
     document.getElementById("eventForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       const date = normalizeDateString(document.getElementById("eventDate").value) || currentDateString();
       const time = normalizeTimeString(document.getElementById("eventTime").value);
       const venue = cleanText(document.getElementById("eventVenue").value, 120);
+      const location = cleanText(document.getElementById("eventLocation").value, 60) || venueLocationFor(venue);
       const name = cleanMultilineText(document.getElementById("eventName").value, 240);
       if (!time || !venue || !name) return;
       state.venueDate = date;
       if (editingEventId) {
         state.events = state.events.map((item) => (
-          item.id === editingEventId ? { ...item, date, time, venue, name, visibleOnSignage: item.visibleOnSignage === true } : item
+          item.id === editingEventId ? { ...item, date, time, venue, location, name, visibleOnSignage: item.visibleOnSignage === true } : item
         ));
       } else {
-        state.events.push({ id: crypto.randomUUID(), date, visibleOnSignage: false, time, venue, name });
+        state.events.push({ id: crypto.randomUUID(), date, visibleOnSignage: false, time, venue, location, name });
       }
       state.events = sortEvents(state.events);
       saveState();
@@ -1788,8 +1807,7 @@
         card.appendChild(time);
         const detail = createEl("div", "venue-detail");
         const roomLine = createEl("div", "venue-room-line");
-        const location = venueLocationFor(event.venue);
-        if (location) roomLine.appendChild(createEl("span", "venue-location-badge", location));
+        roomLine.appendChild(createEl("span", "venue-location-badge", eventLocationFor(event)));
         roomLine.appendChild(createEl("div", "venue-room", formatVenueLines(event.venue)));
         detail.appendChild(roomLine);
         detail.appendChild(createEl("div", "venue-divider"));

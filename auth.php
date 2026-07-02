@@ -214,6 +214,7 @@ function signage_events(mixed $items): array
         }
         $time = signage_time($item['time'] ?? '');
         $venue = signage_string($item['venue'] ?? '', 120);
+        $location = signage_string($item['location'] ?? '', 60);
         $name = signage_multiline_string($item['name'] ?? '', 240);
         if ($time === '' || $venue === '' || $name === '') {
             continue;
@@ -224,6 +225,7 @@ function signage_events(mixed $items): array
             'visibleOnSignage' => signage_bool($item['visibleOnSignage'] ?? false),
             'time' => $time,
             'venue' => $venue,
+            'location' => $location,
             'name' => $name,
         ];
     }
