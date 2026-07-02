@@ -1148,6 +1148,13 @@ body[data-screen="venue"] .venue-room-line {
   justify-content: center;
 }
 
+body[data-screen="venue"] .venue-location-badge {
+  display: block;
+  height: auto;
+  padding: 2px 10px;
+  font-size: 1.4vh;
+}
+
 body[data-screen="venue"] .venue-name {
   font-size: 1.4vh;
 }
