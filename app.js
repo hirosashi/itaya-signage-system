@@ -693,7 +693,10 @@
   }
 
   function dateForVenue(options = {}) {
-    return normalizeDateString(options.previewDate || params.get("date") || state.venueDate) || currentDateString();
+    const previewDate = normalizeDateString(options.previewDate);
+    if (previewDate) return previewDate;
+    if (pageScreen === "venue") return currentDateString();
+    return normalizeDateString(params.get("date") || state.venueDate) || currentDateString();
   }
 
   function dateObjectFromString(value) {
@@ -1807,7 +1810,8 @@
         card.appendChild(time);
         const detail = createEl("div", "venue-detail");
         const roomLine = createEl("div", "venue-room-line");
-        roomLine.appendChild(createEl("span", "venue-location-badge", eventLocationFor(event)));
+        const location = eventLocationFor(event);
+        if (location) roomLine.appendChild(createEl("span", "venue-location-badge", location));
         roomLine.appendChild(createEl("div", "venue-room", formatVenueLines(event.venue)));
         detail.appendChild(roomLine);
         detail.appendChild(createEl("div", "venue-divider"));
