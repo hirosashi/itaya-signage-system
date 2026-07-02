@@ -1123,6 +1123,35 @@ body[data-admin-screen] .segmented {
   grid-row: 1 / -1;
 }
 
+body[data-screen="venue"] .venue-header h1 {
+  font-size: 4vw;
+}
+
+body[data-screen="venue"] .venue-date {
+  font-size: 3vw;
+}
+
+body[data-screen="venue"] .venue-status-label {
+  font-size: 1.4vw;
+}
+
+body[data-screen="venue"] .venue-time span {
+  font-size: 4vw;
+}
+
+body[data-screen="venue"] .venue-room {
+  font-size: 2.5vw;
+  line-height: 1.4em;
+}
+
+body[data-screen="venue"] .venue-room-line {
+  justify-content: center;
+}
+
+body[data-screen="venue"] .venue-name {
+  font-size: 2.5vw;
+}
+
 @keyframes slide-content-in {
   from {
     opacity: 0;
