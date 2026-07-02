@@ -1142,6 +1142,8 @@ body[data-screen="venue"] .venue-time span {
 body[data-screen="venue"] .venue-room {
   font-size: 1.4vh;
   line-height: 1.4em;
+  width: 100%;
+  text-align: center;
 }
 
 body[data-screen="venue"] .venue-room-line {
