@@ -1132,7 +1132,7 @@ body[data-screen="venue"] .venue-date {
 }
 
 body[data-screen="venue"] .venue-status-label {
-  font-size: 1.4vh;
+  font-size: 0.8vh;
 }
 
 body[data-screen="venue"] .venue-time span {
