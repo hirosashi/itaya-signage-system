@@ -730,6 +730,12 @@
     ].join("|");
   }
 
+  function formatVenueGuestName(name) {
+    const trimmed = String(name || "").trim();
+    if (!trimmed) return "";
+    return trimmed.endsWith("様") ? trimmed : `${trimmed}様`;
+  }
+
   function mergeImportedVenueEvents(importedEvents) {
     const importedDates = new Set(importedEvents.map((event) => event.date || currentDateString()));
     const visibleByIdentity = new Map(
@@ -1815,7 +1821,7 @@
         roomLine.appendChild(createEl("div", "venue-room", formatVenueLines(event.venue)));
         detail.appendChild(roomLine);
         detail.appendChild(createEl("div", "venue-divider"));
-        detail.appendChild(createEl("div", "venue-name", event.name));
+        detail.appendChild(createEl("div", "venue-name", formatVenueGuestName(event.name)));
         card.appendChild(detail);
         list.appendChild(card);
       });
