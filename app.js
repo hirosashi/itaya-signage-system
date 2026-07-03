@@ -200,8 +200,17 @@
   }
 
   function venueLocationFor(venue) {
-    const name = displayVenueName(venue);
-    return venueLocations[name] || venueLocations[venueBaseName(name)] || "";
+    const names = displayVenueName(venue).split(",").map((item) => item.trim()).filter(Boolean);
+    const locations = names.map((name) => {
+      const baseName = venueBaseName(name);
+      const exactLocation = venueLocations[name] || venueLocations[baseName];
+      if (exactLocation) return exactLocation;
+      const matchedVenue = Object.keys(venueLocations)
+        .sort((a, b) => b.length - a.length)
+        .find((venueName) => name.includes(venueName) || baseName.includes(venueName));
+      return matchedVenue ? venueLocations[matchedVenue] : "";
+    }).filter(Boolean);
+    return [...new Set(locations)].join(", ");
   }
 
   function eventLocationFor(event) {
