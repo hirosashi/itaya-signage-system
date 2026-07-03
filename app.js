@@ -196,7 +196,7 @@
   }
 
   function formatVenueLines(venue) {
-    return displayVenueName(venue).split(",").map((item) => item.trim()).filter(Boolean).join("\n");
+    return displayVenueName(venue).split(",").map((item) => item.trim()).filter(Boolean).join("、");
   }
 
   function venueLocationFor(venue) {
