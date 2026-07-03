@@ -1149,6 +1149,8 @@ body[data-screen="venue"] .venue-room {
 
 body[data-screen="venue"] .venue-room-line {
   justify-content: center;
+  display: flex;
+  flex-wrap: wrap;
 }
 
 body[data-screen="venue"] .venue-location-badge {
@@ -1168,6 +1170,8 @@ body[data-admin-page="index"] #screenPreview .venue-date {
 
 body[data-admin-page="index"] #screenPreview .venue-room-line {
   justify-content: center;
+  display: flex;
+  flex-wrap: wrap;
 }
 
 body[data-admin-page="index"] #screenPreview .venue-room {
