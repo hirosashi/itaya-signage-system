@@ -838,7 +838,7 @@
       weekday: "short"
     }).formatToParts(date);
     const values = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
-    return `${values.month}月${values.day}日（${values.weekday}）の会場`;
+    return `${values.month}月${values.day}日（${values.weekday}）の会場案内`;
   }
 
   function sortEvents(events) {
