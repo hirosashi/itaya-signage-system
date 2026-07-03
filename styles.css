@@ -1137,6 +1137,7 @@ body[data-screen="venue"] .venue-status-label {
 
 body[data-screen="venue"] .venue-time span {
   font-size: 2.2vh;
+  font-weight: 700;
 }
 
 body[data-screen="venue"] .venue-room {
