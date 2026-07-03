@@ -1141,7 +1141,7 @@ body[data-screen="venue"] .venue-time span {
 
 body[data-screen="venue"] .venue-room {
   font-size: 1.4vh;
-  line-height: 1.4em;
+  line-height: 1.1em;
   width: 100%;
   text-align: center;
 }
@@ -1167,6 +1167,11 @@ body[data-admin-page="index"] #screenPreview .venue-date {
 
 body[data-admin-page="index"] #screenPreview .venue-room-line {
   justify-content: center;
+}
+
+body[data-admin-page="index"] #screenPreview .venue-room {
+  font-size: 1.4vh;
+  line-height: 1.1em;
 }
 
 body[data-admin-page="index"] #screenPreview .venue-name {
