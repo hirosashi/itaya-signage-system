@@ -830,6 +830,17 @@
     }).format(date);
   }
 
+  function formatVenueTitleDate(date = new Date()) {
+    const parts = new Intl.DateTimeFormat("ja-JP", {
+      timeZone: VENUE_TIME_ZONE,
+      month: "numeric",
+      day: "numeric",
+      weekday: "short"
+    }).formatToParts(date);
+    const values = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+    return `${values.month}月${values.day}日（${values.weekday}）の会場`;
+  }
+
   function sortEvents(events) {
     return [...events].sort((a, b) => {
       const dateDiff = String(a.date || "").localeCompare(String(b.date || ""), "ja");
@@ -1803,9 +1814,8 @@
     const screen = createEl("section", `signage-screen venue-screen ${themeClass}`);
 
     const header = createEl("header", "venue-header");
-    const title = createEl("h1", "", "本日の会場案内");
-    const date = createEl("p", "venue-date", `${formatDate(dateObjectFromString(referenceDate))}　${periodLabel(period)}`);
-    header.append(title, date);
+    const title = createEl("h1", "", formatVenueTitleDate(dateObjectFromString(referenceDate)));
+    header.appendChild(title);
 
     const list = createEl("div", "venue-list");
     if (!visibleEvents.length) {
