@@ -23,7 +23,7 @@ body {
   margin: 0;
   color: var(--ink);
   background: var(--admin-bg);
-  font-family: "MS PMincho", "ＭＳ Ｐ明朝", "Yu Mincho", serif;
+  font-family: "Noto Serif JP", "Yu Mincho", serif;
 }
 
 button,
@@ -699,7 +699,7 @@ body[data-admin-screen] .segmented {
 
 .ad-header-title text {
   fill: #fff;
-  font-family: "MS PMincho", "ＭＳ Ｐ明朝", "Yu Mincho", serif;
+  font-family: "Noto Serif JP", "Yu Mincho", serif;
   font-weight: 700;
 }
 
@@ -875,7 +875,7 @@ body[data-admin-screen] .segmented {
 
 .venue-header h1 {
   margin: 0;
-  font-family: "MS PMincho", "ＭＳ Ｐ明朝", "Yu Mincho", serif;
+  font-family: "Noto Serif JP", "Yu Mincho", serif;
   font-size: clamp(20px, 5.4cqw, 58px);
   font-weight: 500;
   letter-spacing: 0;
@@ -987,7 +987,7 @@ body[data-admin-screen] .segmented {
   gap: clamp(2px, 0.32cqh, 5px);
   height: 100%;
   color: #fff;
-  font-family: "MS PMincho", "ＭＳ Ｐ明朝", "Yu Mincho", serif;
+  font-family: "Noto Serif JP", "Yu Mincho", serif;
   font-size: clamp(24px, 5.4cqw, 60px);
   line-height: 1;
   text-align: center;
@@ -1001,7 +1001,7 @@ body[data-admin-screen] .segmented {
 
 .venue-status-label {
   color: #f2d98f;
-  font-family: "MS PMincho", "ＭＳ Ｐ明朝", "Yu Mincho", serif;
+  font-family: "Noto Serif JP", "Yu Mincho", serif;
   font-size: clamp(7px, 1.27cqw, 14px);
   font-weight: 700;
   line-height: 1;
@@ -1072,7 +1072,7 @@ body[data-admin-screen] .segmented {
 .venue-room {
   min-width: 0;
   color: #111;
-  font-family: "MS PMincho", "ＭＳ Ｐ明朝", "Yu Mincho", serif;
+  font-family: "Noto Serif JP", "Yu Mincho", serif;
   font-size: clamp(16px, 2.9cqw, 32px);
   font-weight: 700;
   line-height: 1.05;
@@ -1087,7 +1087,7 @@ body[data-admin-screen] .segmented {
 .venue-name {
   align-self: center;
   overflow-wrap: anywhere;
-  font-family: "MS PMincho", "ＭＳ Ｐ明朝", "Yu Mincho", serif;
+  font-family: "Noto Serif JP", "Yu Mincho", serif;
   font-size: clamp(18px, 3.42cqw, 38px);
   font-weight: 700;
   line-height: 1.15;
