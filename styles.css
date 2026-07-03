@@ -1173,6 +1173,11 @@ body[data-admin-page="index"] #screenPreview .venue-name {
   font-size: 29px;
 }
 
+body[data-admin-page="venue"] #screenPreview .venue-room {
+  width: 100%;
+  text-align: center;
+}
+
 @keyframes slide-content-in {
   from {
     opacity: 0;
