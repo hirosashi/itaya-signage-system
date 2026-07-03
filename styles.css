@@ -1176,6 +1176,8 @@ body[data-admin-page="index"] #screenPreview .venue-room-line {
 
 body[data-admin-page="index"] #screenPreview .venue-room {
   line-height: 1.1em;
+  width: 100%;
+  text-align: center;
 }
 
 body[data-admin-page="index"] #screenPreview .venue-name {
