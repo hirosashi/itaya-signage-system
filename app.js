@@ -943,6 +943,16 @@
     await renderAdminPreview();
   }
 
+  async function moveMedia(key, index, direction) {
+    const items = state[key];
+    const nextIndex = index + direction;
+    if (!Array.isArray(items) || nextIndex < 0 || nextIndex >= items.length) return;
+    [items[index], items[nextIndex]] = [items[nextIndex], items[index]];
+    saveState();
+    renderAdminLists();
+    await renderAdminPreview();
+  }
+
   function adKeysForSlot(slot) {
     const isAd2 = slot === "ad2";
     return {
@@ -1048,10 +1058,22 @@
       const pageText = isPdfMedia(media) && media.pageCount ? ` / ${media.pageCount}ページ` : "";
       const sourceText = isSampleMedia(media) ? "サンプル画像" : formatBytes(media.size || 0);
       text.appendChild(createEl("small", "", `${media.type || "file"} / ${sourceText}${pageText}`));
+      const actions = createEl("div", "media-item-actions");
+      const upButton = createEl("button", "", "↑");
+      upButton.type = "button";
+      upButton.disabled = index === 0;
+      upButton.title = "上へ移動";
+      upButton.addEventListener("click", () => moveMedia(key, index, -1));
+      const downButton = createEl("button", "", "↓");
+      downButton.type = "button";
+      downButton.disabled = index === items.length - 1;
+      downButton.title = "下へ移動";
+      downButton.addEventListener("click", () => moveMedia(key, index, 1));
       const button = createEl("button", "", "削除");
       button.type = "button";
       button.addEventListener("click", () => removeMedia(key, media.id));
-      row.append(text, button);
+      actions.append(upButton, downButton, button);
+      row.append(text, actions);
       mount.appendChild(row);
     });
   }

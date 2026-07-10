@@ -373,6 +373,23 @@ body[data-admin-screen] .segmented {
   background: #ebe7dc;
 }
 
+.media-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.media-item-actions button {
+  min-width: 38px;
+  padding: 0 10px;
+}
+
+.media-item-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
+
 .event-row.is-editing {
   border-color: rgba(185, 154, 88, 0.72);
   background: rgba(185, 154, 88, 0.1);
