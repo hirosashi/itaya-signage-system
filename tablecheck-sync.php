@@ -123,9 +123,22 @@ function tablecheck_is_list(array $array): bool
 function tablecheck_text(mixed $value, int $maxLength): string
 {
     if (is_array($value)) {
+        if (isset($value['ja'])) {
+            $value = $value['ja'];
+        } elseif (isset($value['en'])) {
+            $value = $value['en'];
+        } elseif (isset($value['name'])) {
+            $value = $value['name'];
+        } elseif (isset($value['label'])) {
+            $value = $value['label'];
+        } elseif (isset($value['title'])) {
+            $value = $value['title'];
+        }
+    }
+    if (is_array($value)) {
         $value = implode(', ', array_filter(array_map(static function ($item): string {
             if (is_array($item)) {
-                return (string) ($item['name'] ?? $item['label'] ?? $item['title'] ?? '');
+                return tablecheck_text($item['name_translations'] ?? $item['name'] ?? $item['label'] ?? $item['title'] ?? '', 120);
             }
             return (string) $item;
         }, $value)));
@@ -133,6 +146,22 @@ function tablecheck_text(mixed $value, int $maxLength): string
     $text = trim((string) $value);
     $text = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $text) ?? '';
     return function_exists('mb_substr') ? mb_substr($text, 0, $maxLength, 'UTF-8') : substr($text, 0, $maxLength);
+}
+
+function tablecheck_string_list(mixed $value, int $maxItems = 20): array
+{
+    if (!is_array($value)) {
+        $text = tablecheck_text($value, 120);
+        return $text !== '' ? [$text] : [];
+    }
+    $items = [];
+    foreach (array_slice($value, 0, $maxItems) as $item) {
+        $text = tablecheck_text($item, 120);
+        if ($text !== '') {
+            $items[] = $text;
+        }
+    }
+    return array_values(array_unique($items));
 }
 
 function tablecheck_datetime_parts(mixed $value): array
@@ -155,7 +184,7 @@ function tablecheck_datetime_parts(mixed $value): array
 
 function tablecheck_extract_items(array $decoded): array
 {
-    foreach (['reservations', 'items', 'data', 'results'] as $key) {
+    foreach (['reservations', 'reservation_flags', 'items', 'data', 'results'] as $key) {
         if (isset($decoded[$key]) && is_array($decoded[$key])) {
             return tablecheck_is_list($decoded[$key]) ? $decoded[$key] : tablecheck_extract_items($decoded[$key]);
         }
@@ -169,7 +198,7 @@ function tablecheck_is_cancelled(array $item): bool
     return str_contains($status, 'cancel') || str_contains($status, 'キャンセル');
 }
 
-function tablecheck_event_from_reservation(array $item): ?array
+function tablecheck_event_from_reservation(array $item, array $flagNames = []): ?array
 {
     if (tablecheck_is_cancelled($item)) {
         return null;
@@ -216,6 +245,12 @@ function tablecheck_event_from_reservation(array $item): ?array
         'floor',
         'shop.name',
     ]), 60);
+    $status = tablecheck_text(tablecheck_get_path($item, ['status', 'state', 'booking_status', 'reservation_status']), 80);
+    $flagIds = tablecheck_string_list(tablecheck_get_path($item, ['reservation_flag_ids', 'flag_ids', 'flags']), 50);
+    $flags = array_values(array_filter(array_map(
+        static fn($flagId): string => $flagNames[$flagId] ?? $flagId,
+        $flagIds
+    )));
 
     if ($venue === '' || $name === '') {
         return null;
@@ -235,12 +270,18 @@ function tablecheck_event_from_reservation(array $item): ?array
         'venue' => $venue,
         'location' => $location,
         'name' => $name,
+        'status' => $status,
+        'flagIds' => $flagIds,
+        'flags' => $flags,
     ];
 }
 
-function tablecheck_request(string $secret, array $query): array
+function tablecheck_request_path(string $secret, string $path, array $query = []): array
 {
-    $url = TABLECHECK_API_BASE . '/reservations?' . http_build_query($query);
+    $url = TABLECHECK_API_BASE . $path;
+    if ($query) {
+        $url .= '?' . http_build_query($query);
+    }
     $headers = [
         'Accept: application/json',
         'Authorization: ' . $secret,
@@ -283,6 +324,33 @@ function tablecheck_request(string $secret, array $query): array
     return $decoded;
 }
 
+function tablecheck_request(string $secret, array $query): array
+{
+    return tablecheck_request_path($secret, '/reservations', $query);
+}
+
+function tablecheck_reservation_flag_names(string $secret): array
+{
+    try {
+        $decoded = tablecheck_request_path($secret, '/reservation_flags', ['per_page' => 100, 'page' => 0]);
+    } catch (Throwable) {
+        return [];
+    }
+    $items = tablecheck_extract_items($decoded);
+    $names = [];
+    foreach ($items as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+        $id = tablecheck_text(tablecheck_get_path($item, ['id', 'reservation_flag_id']), 80);
+        $name = tablecheck_text(tablecheck_get_path($item, ['name_translations', 'name', 'label', 'title']), 120);
+        if ($id !== '' && $name !== '') {
+            $names[$id] = $name;
+        }
+    }
+    return $names;
+}
+
 function tablecheck_sync(): array
 {
     global $dataDir, $stateFile, $logFile;
@@ -304,6 +372,7 @@ function tablecheck_sync(): array
         'per_page' => 100,
     ];
 
+    $flagNames = tablecheck_reservation_flag_names($secret);
     $events = [];
     $requestCount = 0;
     for ($page = 0; $page < 20; $page += 1) {
@@ -314,7 +383,7 @@ function tablecheck_sync(): array
             if (!is_array($item)) {
                 continue;
             }
-            $event = tablecheck_event_from_reservation($item);
+            $event = tablecheck_event_from_reservation($item, $flagNames);
             if ($event) {
                 $events[$event['id']] = $event;
             }
@@ -334,6 +403,7 @@ function tablecheck_sync(): array
         'startDate' => $startDate,
         'days' => $days,
         'requestCount' => $requestCount,
+        'flagCount' => count($flagNames),
         'events' => $events,
     ];
 

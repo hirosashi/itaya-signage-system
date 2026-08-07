@@ -253,6 +253,10 @@ body[data-admin-screen="venue-auto"] [data-preview-screen]:not([data-preview-scr
   font-size: 13px;
 }
 
+.tablecheck-event-meta {
+  color: #695018;
+}
+
 body[data-admin-screen] .segmented {
   grid-template-columns: minmax(86px, 1fr);
 }

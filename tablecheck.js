@@ -204,6 +204,9 @@
       venue: displayVenueName(event.venue),
       location: cleanText(event.location || "", 60),
       name: cleanText(event.name || "", 240),
+      status: cleanText(event.status || "", 80),
+      flags: Array.isArray(event.flags) ? event.flags.map((flag) => cleanText(flag, 80)).filter(Boolean) : [],
+      flagIds: Array.isArray(event.flagIds) ? event.flagIds.map((flagId) => cleanText(flagId, 80)).filter(Boolean) : [],
       visibleOnSignage: event.visibleOnSignage !== false
     })).filter((event) => event.time && event.venue && event.name);
   }
@@ -468,6 +471,11 @@
       const text = createEl("div");
       text.appendChild(createEl("strong", "", `${event.date}　${event.time}　${formatVenueLines(event.venue)}`));
       text.appendChild(createEl("small", "", event.name));
+      const meta = [];
+      if (event.status) meta.push(`ステータス: ${event.status}`);
+      if (event.flags.length) meta.push(`フラグ: ${event.flags.join("、")}`);
+      if (!event.flags.length && event.flagIds.length) meta.push(`フラグID: ${event.flagIds.join("、")}`);
+      if (meta.length) text.appendChild(createEl("small", "tablecheck-event-meta", meta.join(" / ")));
       const actions = createEl("div", "event-row-actions");
       actions.appendChild(createEl("button", "", "自動表示"));
       row.append(text, actions);
