@@ -11,6 +11,15 @@ header('Cache-Control: no-store');
 
 const TABLECHECK_API_BASE = 'https://api.tablecheck.com/api/crm/v1';
 const TABLECHECK_CACHE_TTL = 600;
+const TABLECHECK_DEFAULT_SHOP_SLUGS = [
+    'newitaya-banquet',
+    'newitaya-tajima',
+    'newitaya-china',
+    'newitaya-chestnut',
+    'newitaya-french',
+    'newitaya-marble',
+    'newitaya-tajima-pickup',
+];
 
 $dataDir = __DIR__ . '/data';
 $stateFile = $dataDir . '/tablecheck-state.json';
@@ -192,6 +201,7 @@ function tablecheck_event_from_reservation(array $item): ?array
         'table.name',
         'table',
         'tables',
+        'room_name',
         'room.name',
         'room',
         'section.name',
@@ -201,6 +211,7 @@ function tablecheck_event_from_reservation(array $item): ?array
     ]), 120);
     $name = tablecheck_text(tablecheck_get_path($item, [
         'group_name',
+        'party_name',
         'booking_name',
         'reservation_name',
         'company_name',
@@ -305,28 +316,40 @@ function tablecheck_sync(): array
 
     $shopIds = tablecheck_array_value($config, 'shop_ids');
     $shopSlugs = tablecheck_array_value($config, 'shop_slugs');
-    if (count($shopIds) === 1) {
-        $baseQuery['shop_id'] = $shopIds[0];
+    if (!$shopIds && !$shopSlugs) {
+        $shopSlugs = TABLECHECK_DEFAULT_SHOP_SLUGS;
     }
-    if (count($shopSlugs) === 1) {
-        $baseQuery['shop_slug'] = $shopSlugs[0];
+
+    $targetQueries = [];
+    foreach ($shopIds as $shopId) {
+        $targetQueries[] = $baseQuery + ['shop_id' => $shopId];
+    }
+    foreach ($shopSlugs as $shopSlug) {
+        $targetQueries[] = $baseQuery + ['shop_slug' => $shopSlug];
+    }
+    if (!$targetQueries) {
+        $targetQueries[] = $baseQuery;
     }
 
     $events = [];
-    for ($page = 1; $page <= 20; $page += 1) {
-        $decoded = tablecheck_request($secret, $baseQuery + ['page' => $page]);
-        $items = tablecheck_extract_items($decoded);
-        foreach ($items as $item) {
-            if (!is_array($item)) {
-                continue;
+    $requestCount = 0;
+    foreach ($targetQueries as $targetQuery) {
+        for ($page = 1; $page <= 20; $page += 1) {
+            $requestCount += 1;
+            $decoded = tablecheck_request($secret, $targetQuery + ['page' => $page]);
+            $items = tablecheck_extract_items($decoded);
+            foreach ($items as $item) {
+                if (!is_array($item)) {
+                    continue;
+                }
+                $event = tablecheck_event_from_reservation($item);
+                if ($event) {
+                    $events[$event['id']] = $event;
+                }
             }
-            $event = tablecheck_event_from_reservation($item);
-            if ($event) {
-                $events[$event['id']] = $event;
+            if (count($items) < 100) {
+                break;
             }
-        }
-        if (count($items) < 100) {
-            break;
         }
     }
 
@@ -339,6 +362,11 @@ function tablecheck_sync(): array
         'syncedAt' => date(DATE_ATOM),
         'startDate' => $startDate,
         'days' => $days,
+        'shops' => [
+            'ids' => $shopIds,
+            'slugs' => $shopSlugs,
+        ],
+        'requestCount' => $requestCount,
         'events' => $events,
     ];
 
