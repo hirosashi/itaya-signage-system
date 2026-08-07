@@ -246,6 +246,7 @@ function tablecheck_event_from_reservation(array $item, array $flagNames = []): 
         'shop.name',
     ]), 60);
     $status = tablecheck_text(tablecheck_get_path($item, ['status', 'state', 'booking_status', 'reservation_status']), 80);
+    $pax = tablecheck_text(tablecheck_get_path($item, ['pax', 'pax_adult', 'party_size', 'covers']), 20);
     $flagIds = tablecheck_string_list(tablecheck_get_path($item, ['reservation_flag_ids', 'flag_ids', 'flags']), 50);
     $flags = array_values(array_filter(array_map(
         static fn($flagId): string => $flagNames[$flagId] ?? $flagId,
@@ -270,6 +271,7 @@ function tablecheck_event_from_reservation(array $item, array $flagNames = []): 
         'venue' => $venue,
         'location' => $location,
         'name' => $name,
+        'pax' => $pax,
         'status' => $status,
         'flagIds' => $flagIds,
         'flags' => $flags,

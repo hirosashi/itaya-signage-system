@@ -206,7 +206,8 @@ body:not(.auth-locked) .login-app,
 body[data-admin-screen="ad1"] [data-admin-nav="ad1"],
 body[data-admin-screen="ad2"] [data-admin-nav="ad2"],
 body[data-admin-screen="venue"] [data-admin-nav="venue"],
-body[data-admin-screen="venue-auto"] [data-admin-nav="venue-auto"] {
+body[data-admin-screen="venue-auto"] [data-admin-nav="venue-auto"],
+body[data-admin-screen="report"] [data-admin-nav="report"] {
   color: #fff;
   background: var(--itaya-navy);
 }
@@ -255,6 +256,199 @@ body[data-admin-screen="venue-auto"] [data-preview-screen]:not([data-preview-scr
 
 .tablecheck-event-meta {
   color: #695018;
+}
+
+.report-page {
+  background: #e7e2d8;
+}
+
+.report-toolbar {
+  padding: 18px 24px;
+}
+
+.report-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(17, 27, 75, 0.12);
+  border-radius: 8px;
+}
+
+.report-controls label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.report-controls input,
+.report-controls select {
+  min-height: 38px;
+  padding: 0 10px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid rgba(17, 27, 75, 0.18);
+  border-radius: 6px;
+}
+
+.report-controls button {
+  min-height: 38px;
+  padding: 0 16px;
+  color: #fff;
+  font-weight: 700;
+  background: var(--itaya-navy);
+  border-radius: 6px;
+}
+
+.report-status {
+  max-width: 1480px;
+  min-height: 20px;
+  margin: 8px auto 0;
+  color: #8c4b00;
+  font-size: 13px;
+}
+
+.reservation-report {
+  width: 297mm;
+  min-height: 210mm;
+  margin: 0 auto 32px;
+  padding: 7mm;
+  color: #111;
+  background: #fff;
+  box-shadow: 0 18px 60px rgba(17, 27, 75, 0.22);
+}
+
+.report-sheet-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+  gap: 12px;
+  margin-bottom: 4mm;
+}
+
+.report-sheet-header h1 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.report-date-title {
+  justify-self: end;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.report-meta {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-bottom: 2mm;
+  font-size: 11px;
+}
+
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2mm;
+}
+
+.report-period {
+  min-width: 0;
+}
+
+.report-period h2 {
+  margin: 0;
+  padding: 1mm 0;
+  font-size: 12px;
+  text-align: center;
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 8.3px;
+  line-height: 1.18;
+}
+
+.report-table th,
+.report-table td {
+  min-height: 7mm;
+  padding: 1mm;
+  vertical-align: top;
+  border: 0.4px solid #555;
+}
+
+.report-table th {
+  font-size: 7.5px;
+  font-weight: 700;
+  text-align: center;
+  background: #f2f2f2;
+}
+
+.report-table .venue-cell {
+  width: 15%;
+  font-weight: 700;
+}
+
+.report-table .mark-cell {
+  width: 5%;
+}
+
+.report-table .name-cell {
+  width: 31%;
+}
+
+.report-table .type-cell {
+  width: 10%;
+}
+
+.report-table .pax-cell {
+  width: 7%;
+  text-align: right;
+}
+
+.report-table .time-cell {
+  width: 9%;
+  text-align: center;
+}
+
+.report-table .note-cell {
+  width: 23%;
+}
+
+@page {
+  size: A4 landscape;
+  margin: 7mm;
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+
+  .report-toolbar {
+    display: none;
+  }
+
+  .reservation-report {
+    width: auto;
+    min-height: auto;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  .report-table {
+    font-size: 7.2px;
+  }
 }
 
 body[data-admin-screen] .segmented {
