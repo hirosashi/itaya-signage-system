@@ -8,5 +8,8 @@ build/
 .env.*
 data/signage-state.json
 data/signage-updates.log
+data/tablecheck-state.json
+data/tablecheck-updates.log
 uploads/
 .htpasswd-newitaya
+tablecheck-config.php

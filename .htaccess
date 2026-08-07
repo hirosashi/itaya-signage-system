@@ -10,7 +10,7 @@
 Options -Indexes
 DirectoryIndex index.php index.html
 
-<FilesMatch "^(index|admin-ad1|admin-ad2|admin-venue)\.html$|^(login|upload)\.php$">
+<FilesMatch "^(index|admin-ad1|admin-ad2|admin-venue|admin-venue-auto)\.html$|^(login|upload)\.php$">
   AuthType Basic
   AuthName "Itaya Signage Admin"
   AuthUserFile /home/jyunbi/www/newitaya.com/.htpasswd-newitaya
@@ -22,7 +22,7 @@ DirectoryIndex index.php index.html
   </IfModule>
 </FilesMatch>
 
-<FilesMatch "(^\.|\.bak$|\.old$|\.orig$|\.save$|\.sql$|\.log$|\.csv$|\.ini$|\.env$|composer\.(json|lock)$|package(-lock)?\.json$)">
+<FilesMatch "(^\.|tablecheck-config\.php$|\.bak$|\.old$|\.orig$|\.save$|\.sql$|\.log$|\.csv$|\.ini$|\.env$|composer\.(json|lock)$|package(-lock)?\.json$)">
   <IfModule mod_authz_core.c>
     Require all denied
   </IfModule>
